@@ -28,5 +28,10 @@ if ! is_btrfs_subvolume $DEST_SNAP; then
 	btrfs sub create $DEST_SNAP
 fi
 
-buttersink $SRC1_SNAP/ $DEST_SNAP
-buttersink $SRC2_SNAP/ $DEST_SNAP
+exec_limited () {
+	cpulimit -l 30 $* 
+}
+
+exec_limited buttersink $SRC1_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC1_SNAP"
+exec_limited buttersink $SRC2_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC2_SNAP"
+#exec_limited rsync -avP /boot 
