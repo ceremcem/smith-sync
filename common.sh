@@ -16,10 +16,7 @@ ROOT_MOUNT_POINT="/mnt/${ROOT_NAME}"
 D_DEVICE="${ROOT_NAME}_crypt"  # decrypted device name
 D_DEVICE_PATH="/dev/mapper/$D_DEVICE"
 
-CRYPT_PART_UUID=$(cat $DIR/crypt-part-uuid.txt)
-CRYPT_DEVICE=$(findfs UUID=$CRYPT_PART_UUID)
 
-DEVICE=""
 
 echo_err () {
 	echo "ERROR:"
@@ -29,6 +26,15 @@ echo_err () {
 	echo "ERROR:"
 	exit 1
 }
+
+CRYPT_PART_UUID=$(cat $DIR/crypt-part-uuid.txt)
+CRYPT_DEVICE=$(findfs UUID=$CRYPT_PART_UUID)
+
+if [[ ! -b $CRYPT_DEVICE ]]; then 
+	echo_err "can not find disk with UUID of $CRYPT_PART_UUID"
+fi 
+
+DEVICE=""
 
 select_device () {
 	DEVICE=$(readlink -e /dev/disk/by-id/$(cat $DIR/known-disk.txt))
