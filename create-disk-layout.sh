@@ -15,6 +15,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/common.sh
 
+detect_local
+
 echo "-----------------------------"
 echo "Select disk to be formatted: "
 echo "-----------------------------"

@@ -7,15 +7,7 @@ if [[ $(id -u) > 0 ]]; then
 fi 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-ROOT_NAME="zencefil" # The volume group name 
-SWAP_PART="/dev/$ROOT_NAME/swap"
-ROOT_PART="/dev/$ROOT_NAME/root"
-
-ROOT_MOUNT_POINT="/mnt/${ROOT_NAME}"
-D_DEVICE="${ROOT_NAME}_crypt"  # decrypted device name
-D_DEVICE_PATH="/dev/mapper/$D_DEVICE"
-
+. $DIR/backup-common.sh
 
 
 echo_err () {
@@ -27,14 +19,16 @@ echo_err () {
 	exit 1
 }
 
-CRYPT_PART_UUID=$(cat $DIR/crypt-part-uuid.txt)
-CRYPT_DEVICE=$(findfs UUID=$CRYPT_PART_UUID)
 
-if [[ ! -b $CRYPT_DEVICE ]]; then 
-	echo_err "can not find disk with UUID of $CRYPT_PART_UUID"
-fi 
+detect_local () {
 
-DEVICE=""
+	CRYPT_PART_UUID=$(cat $DIR/crypt-part-uuid.txt)
+	CRYPT_DEVICE=$(findfs UUID=$CRYPT_PART_UUID)
+
+	if [[ ! -b $CRYPT_DEVICE ]]; then 
+		echo_err "can not find disk with UUID of $CRYPT_PART_UUID"
+	fi 
+}
 
 select_device () {
 	DEVICE=$(readlink -e /dev/disk/by-id/$(cat $DIR/known-disk.txt))

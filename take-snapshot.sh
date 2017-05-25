@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $DIR/backup-common.sh
+. $DIR/common.sh
 
 TIMESTAMP=$(get_timestamp)
 btrfs sub snap -r "$SRC1/$SRC1_SUB1" "$SRC1_SNAP/$SRC1_SUB1/$SRC1_SUB1.$TIMESTAMP"

@@ -1,8 +1,12 @@
 #!/bin/bash 
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $DIR/common.sh
+ROOT_NAME="zencefil" # The volume group name 
+SWAP_PART="/dev/$ROOT_NAME/swap"
+ROOT_PART="/dev/$ROOT_NAME/root"
 
+ROOT_MOUNT_POINT="/mnt/${ROOT_NAME}"
+D_DEVICE="${ROOT_NAME}_crypt"  # decrypted device name
+D_DEVICE_PATH="/dev/mapper/$D_DEVICE"
 
 SRC1="/mnt/erik"
 SRC1_SNAP="$SRC1/snapshots"

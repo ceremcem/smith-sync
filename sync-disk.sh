@@ -1,6 +1,7 @@
 #!/bin/bash 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. $DIR/common.sh
 . $DIR/backup-common.sh
 
 require_mounted $SRC1
@@ -35,8 +36,8 @@ exec_limited () {
 # will be deleted. 
 
 echo "Syncing $SRC1_SNAP"
-exec_limited buttersink $SRC1_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC1_SNAP"
+buttersink $SRC1_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC1_SNAP"
 
 echo "Syncing $SRC2_SNAP"
-exec_limited buttersink $SRC2_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC2_SNAP"
+buttersink $SRC2_SNAP/ $DEST_SNAP || echo_err "error in syncing $SRC2_SNAP"
 #exec_limited rsync -avP /boot 
