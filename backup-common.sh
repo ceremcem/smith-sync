@@ -18,3 +18,5 @@ SRC2_SUB1="cca-heybe"
 
 DEST="$ROOT_MOUNT_POINT"
 DEST_SNAP="$DEST/snapshots"
+
+DEST_SSH_SNAP="/mnt/aea3/snapshots"

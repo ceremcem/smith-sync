@@ -16,8 +16,8 @@ fi
 SSH="ssh://aea3"
 
 echo "Syncing $SRC1_SNAP"
-buttersink $SRC1_SNAP/ $SSH/$DEST_SNAP 
+buttersink $SRC1_SNAP/ $SSH/$DEST_SSH_SNAP 
 
 echo "Syncing $SRC2_SNAP"
-buttersink $SRC2_SNAP/ $SSH/$DEST_SNAP 
+buttersink $SRC2_SNAP/ $SSH/$DEST_SSH_SNAP 
 #exec_limited rsync -avP /boot 
