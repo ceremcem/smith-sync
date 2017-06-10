@@ -21,6 +21,9 @@ for i in {5..1}; do
 	sleep 1
 done
 
+echo "aborting for no reason :P"
+exit
+
 echo "Creating partition table on ${DEVICE}..."
 # to create the partitions programatically (rather than manually)
 # we're going to simulate the manual input to fdisk
@@ -68,6 +71,6 @@ mkswap $SWAP_PART
 mkfs.btrfs $ROOT_PART
 
 echo "Removing LVM partitions and Cryptsetup device"
-remove_parts
+$DIR/detach-disk.sh
 
 echo "done..."

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [[ $(id -u) > 0 ]]; then
-    echo "This script needs root privileges..."
-    sudo $0
+    #echo "This script needs root privileges..."
+    sudo $0 "$@"
     exit
 fi
 
@@ -60,11 +60,16 @@ decrypt_crypted_partition () {
 	cryptsetup $KEY luksOpen "${CRYPT_DEVICE}" "$D_DEVICE"
 }
 
-remove_parts () {
-	echo "Removing parts..."
-	lvchange -a n "/dev/$ROOT_NAME/swap"
-	lvchange -a n "/dev/$ROOT_NAME/root"
-	cryptsetup luksClose "$D_DEVICE_PATH"
+remove_lvm_parts () {
+    for lvm_part in swap root; do
+        p="/dev/$ROOT_NAME/$lvm_part"
+        echo "Removing LVM part: $p";
+	    lvchange -a n $p || return 1
+    done
+}
+
+remove_crypted_part () {
+    cryptsetup luksClose "$D_DEVICE_PATH" || return 1
 }
 
 exec_limited () {
@@ -85,19 +90,23 @@ debug_step () {
     fi
 }
 
-last_snapshot_in () {
+snapshots_in () {
     local TARGET=$1
     local ALL_SNAPSHOTS_IN_PARTITION=$(btrfs sub list $TARGET | awk '{print $9}')
     local ALL_FILES=$(ls $TARGET)
-    local ALL_SNAPSHOTS=""
     for file in $ALL_FILES; do
         for snap in $ALL_SNAPSHOTS_IN_PARTITION; do
             if [[ "$file" == "$snap" ]]; then
-                ALL_SNAPSHOTS="$ALL_SNAPSHOTS $file"
+                echo $file
+                break
             fi
         done
     done
-    echo $ALL_SNAPSHOTS | awk '{print $NF}'
+}
+
+last_snapshot_in () {
+    local TARGET=$1
+    snapshots_in $TARGET | tail -n 1
 }
 
 require_not_mounted () {
@@ -113,4 +122,30 @@ mount_unless_mounted () {
     # mount_if_not_mounted DEVICE MOUNT_POINT
     grep -qs $2 /proc/mounts
     [ $? -ne 0 ] && mount -v "$1" "$2"
+}
+
+umount_if_mounted () {
+    local force=$1
+    local flag=""
+    local device=""
+    if [[ "$force" == "--force" ]]; then
+        flag=" -l "
+        device=$2
+        echo "umounting $device forcibly..."
+    else
+        device=$1
+        echo "umounting $device..."
+    fi
+    umount $flag $device 2> /dev/null
+}
+
+send_snapshots () {
+    local src=$1
+    local dest=$2
+    echo "first detect which snapshots to be sent"
+}
+
+is_btrfs_subvolume_ok () {
+    echo "TODO: check if subvolume's integration is intact"
+    exit 
 }

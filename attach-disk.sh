@@ -3,6 +3,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/common.sh
 
+require_not_mounted $ROOT_MOUNT_POINT
+
 # find and decrypt the crypted partition
 decrypt_crypted_partition
 
