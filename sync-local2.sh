@@ -3,19 +3,31 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/common.sh
 
-for mp in $SRC1 $SRC2 $DEST; do
-    require_mounted $mp
+for i in $SRC1 $SRC2 $DEST; do
+    require_mounted $i
 done
 
 require_being_btrfs_subvolume $DEST_SNAP
 
-#echo "Sendings snapshots from $SRC1_SNAP to $DEST_SNAP"
 
-#SNAP_DIR="$SRC1_SNAP/rootfs"
-SNAP_DIR="$DEST_SNAP/cca-heybe"
-echo "SNAP DIR: $SNAP_DIR"
+SOURCE_SNAPS="$SRC2_SNAP/$SRC2_SUB1"
+DESTINATION_SNAPS="$DEST_SNAP/$SRC2_SUB1"
+echo "Sendings snapshots from $SOURCE_SNAPS to $DESTINATION_SNAPS"
 
-while read -a snap; do
-    echo "this is snapshot to send: $snap"
-    is_btrfs_subvolume_ok $snap
-done < <(snapshots_in $SNAP_DIR)
+while read -a src; do
+    dest="$DESTINATION_SNAPS/$(basename $src)"
+    echo "$src ===>>> $dest"
+
+    get_snapshot_in_dest $src $DESTINATION_SNAPS
+
+    echo "..."
+    echo "..."
+    continue
+    if is_subvolume_successfully_sent $dest; then
+        echo "subvol ok"
+    else
+        echo "subvol will be deleted"
+        #btrfs sub delete $snap
+    fi
+
+done < <(snapshots_in $SOURCE_SNAPS)

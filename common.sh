@@ -144,15 +144,38 @@ send_snapshots () {
     echo "first detect which snapshots to be sent"
 }
 
-is_btrfs_subvolume_ok () {
+is_subvolume_successfully_sent () {
     local subvol=$1
+
+
+    echo "TODO: what if $subvol is not a subvolume?"
+
+
     if [[ "$(get_btrfs_received_uuid $subvol)" == "-" ]]; then
-        echo "$subvol is NOT OK!"
+        #echo "$subvol is NOT OK!"
         return 1
     else
-        echo "$subvol is OK.."
+        #echo "$subvol is OK.."
         return 0
     fi
+}
+
+get_snapshot_in_dest () {
+    # is_snap_already_sent $SRC_SNAP $DEST_SUBVOL
+    local src=$1
+    local dest=$2
+    # if $dest_snap's received_uuid is the same as $src_snap's uuid, then
+    # it means that the snapshot has already been sent.
+    local dest_mount_point=$(mount_point_of $dest)
+    local snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $(get_btrfs_uuid $src) )
+    if [[ "$snap_already_sent" != "" ]]; then
+        echo "$dest_mount_point/$(echo $snap_already_sent | get_btrfs_list_field 'path')"
+    fi
+}
+
+get_btrfs_list_field () {
+    local field=$1
+    grep -oP "(?<=$field )[^ ]+"
 }
 
 get_btrfs_received_uuid () {
@@ -160,7 +183,17 @@ get_btrfs_received_uuid () {
     btrfs sub show $subvol | grep "Received UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
 }
 
-fingerprint_of_snapshot () {
-    local snap=$1
-    echo "TODO: get fingerprint (uuid) of a given snapshot."
+get_btrfs_uuid () {
+    local subvol=$1
+    btrfs sub show $subvol | grep "^\s*UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+}
+
+get_btrfs_parent_uuid () {
+    local subvol=$1
+    btrfs sub show $subvol | grep "Parent UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+}
+
+mount_point_of () {
+    local file=$1
+    findmnt -n -o TARGET --target $file
 }
