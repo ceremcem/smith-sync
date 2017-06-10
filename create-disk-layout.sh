@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 
 # ----------------------------------------------------
@@ -15,25 +15,16 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/common.sh
 
-detect_local
-
-echo "-----------------------------"
-echo "Select disk to be formatted: "
-echo "-----------------------------"
-select_device
-
-if [[ -b $DEVICE ]]; then 
-	for i in {5..1}; do 
-		echo "$DEVICE will be formatted in $i seconds..."
-		sleep 1
-	done
-fi
-
+get_device
+for i in {5..1}; do
+	echo "$DEVICE will be formatted in $i seconds..."
+	sleep 1
+done
 
 echo "Creating partition table on ${DEVICE}..."
 # to create the partitions programatically (rather than manually)
 # we're going to simulate the manual input to fdisk
-# The sed script strips off all the comments so that we can 
+# The sed script strips off all the comments so that we can
 # document what we're doing in-line with the actual commands
 # Note that a blank line (commented as "default" will send a empty
 # line terminated with a newline to take the fdisk default.
@@ -42,10 +33,10 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${DEVICE}
   n # new partition
   p # primary partition
   1 # partition number 1
-    # default - start at beginning of disk 
+    # default - start at beginning of disk
   +300M # boot parttion
   t # change the type (1st partition will be selected automatically)
-  83 # Changed type of partition to 'Linux' 
+  83 # Changed type of partition to 'Linux'
   n # new partition
   p # primary partition
   2 # partion number 2
@@ -64,7 +55,7 @@ mkfs.ext2 "${DEVICE}1"
 echo "Creating LUKS layer on ${DEVICE}2..."
 cryptsetup -y -v luksFormat "${DEVICE}2"
 
-decrypt_partition
+decrypt_crypted_partition
 
 echo "Creating LVM partitions"
 pvcreate "/dev/mapper/$D_DEVICE" || echo_err "physical volume exists.."
@@ -72,7 +63,7 @@ vgcreate "${ROOT_NAME}" "/dev/mapper/$D_DEVICE" || echo_err "volume group exists
 lvcreate -n swap -L 16G $ROOT_NAME
 lvcreate -n root -l 100%FREE $ROOT_NAME
 
-echo "Formatting swap and root (btrfs) partitions" 
+echo "Formatting swap and root (btrfs) partitions"
 mkswap $SWAP_PART
 mkfs.btrfs $ROOT_PART
 
