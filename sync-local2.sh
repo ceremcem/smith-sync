@@ -9,8 +9,13 @@ done
 
 require_being_btrfs_subvolume $DEST_SNAP
 
-echo "Sendings snapshots from $SRC1_SNAP to $DEST_SNAP"
+#echo "Sendings snapshots from $SRC1_SNAP to $DEST_SNAP"
+
+#SNAP_DIR="$SRC1_SNAP/rootfs"
+SNAP_DIR="$DEST_SNAP/cca-heybe"
+echo "SNAP DIR: $SNAP_DIR"
 
 while read -a snap; do
     echo "this is snapshot to send: $snap"
-done < <(snapshots_in $SRC1_SNAP)
+    is_btrfs_subvolume_ok $snap
+done < <(snapshots_in $SNAP_DIR)

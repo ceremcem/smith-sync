@@ -19,6 +19,10 @@ echo_err () {
 	exit 1
 }
 
+echo_debug () {
+	echo -e "DEBUG: $*\n"
+}
+
 
 get_device () {
 	DEVICE=$(readlink -e /dev/disk/by-id/$KNOWN_DISK)
@@ -92,16 +96,11 @@ debug_step () {
 
 snapshots_in () {
     local TARGET=$1
-    local ALL_SNAPSHOTS_IN_PARTITION=$(btrfs sub list $TARGET | awk '{print $9}')
-    local ALL_FILES=$(ls $TARGET)
-    for file in $ALL_FILES; do
-        for snap in $ALL_SNAPSHOTS_IN_PARTITION; do
-            if [[ "$file" == "$snap" ]]; then
-                echo $file
-                break
-            fi
-        done
-    done
+    while read -a file; do
+        if is_btrfs_subvolume $file; then
+            echo $file
+        fi
+    done < <( find $TARGET -maxdepth 1 )
 }
 
 last_snapshot_in () {
@@ -146,6 +145,22 @@ send_snapshots () {
 }
 
 is_btrfs_subvolume_ok () {
-    echo "TODO: check if subvolume's integration is intact"
-    exit 
+    local subvol=$1
+    if [[ "$(get_btrfs_received_uuid $subvol)" == "-" ]]; then
+        echo "$subvol is NOT OK!"
+        return 1
+    else
+        echo "$subvol is OK.."
+        return 0
+    fi
+}
+
+get_btrfs_received_uuid () {
+    local subvol=$1
+    btrfs sub show $subvol | grep "Received UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+}
+
+fingerprint_of_snapshot () {
+    local snap=$1
+    echo "TODO: get fingerprint (uuid) of a given snapshot."
 }
