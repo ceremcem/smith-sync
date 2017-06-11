@@ -11,14 +11,6 @@ set_dir
 
 safe_source $DIR/tests-common.sh
 
-if [[ -z $TEST_NAME ]] || [[ ! -d "$DIR/$TEST_NAME" ]]; then
-    echo "TEST_NAME: $TEST_NAME"
-    echo_err "Usage: $0 my-test/ "
-fi
-if [[ ! -f "$DIR/$TEST_NAME/prepare.sh" ]]; then
-    echo_err "Your test should include a 'prepare.sh'"
-fi
-
 echo_green "* Starting  preparation of $TEST_NAME..."
 
 echo_green "Cleaning up test files first."
@@ -33,4 +25,4 @@ done < <(snapshots_in --all $TEST_FOLDER)
 [ ! -z "$(ls -A $TEST_SUBS)" ] && echo_err "$TEST_SUBS should be empty!"
 [ ! -z "$(ls -A $TEST_FOLDER)" ] && echo_err "$TEST_FOLDER should be empty!"
 
-safe_source "$DIR/$TEST_NAME/prepare.sh"
+safe_source "$DIR/$TEST_SCRIPT_DIR/prepare${TEST_SCRIPT_NUM}.sh"
