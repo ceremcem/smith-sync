@@ -100,7 +100,7 @@ snapshots_in () {
         if is_btrfs_subvolume $file; then
             echo $file
         fi
-    done < <( find $TARGET -maxdepth 1 )
+    done < <( find $TARGET/ -maxdepth 1 -mindepth 1 )
 }
 
 last_snapshot_in () {
@@ -169,11 +169,12 @@ get_snapshot_in_dest () {
     local dest_mount_point=$(mount_point_of $dest)
     local snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $(get_btrfs_uuid $src) )
     if [[ "$snap_already_sent" != "" ]]; then
-        echo "$dest_mount_point/$(echo $snap_already_sent | get_btrfs_list_field 'path')"
+        echo "$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
     fi
 }
 
-get_btrfs_list_field () {
+get_line_field () {
+    # returns the word after a specific $field in a line
     local field=$1
     grep -oP "(?<=$field )[^ ]+"
 }
