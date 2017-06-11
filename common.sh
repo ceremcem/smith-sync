@@ -19,10 +19,30 @@ echo_err () {
 	exit 1
 }
 
+echo_info () {
+	echo "INFO:"
+	echo "INFO: $* "
+	echo "INFO:"
+}
+
 echo_debug () {
 	echo -e "DEBUG: $*\n"
 }
 
+prompt_yes_no () {
+    local message=$1
+    local OK_TO_CONTINUE="no"
+    echo "--------------------------------------------------"
+    echo "                  YES / NO                        "
+    echo "--------------------------------------------------"
+    read -a OK_TO_CONTINUE -p "$message (yes/no) "
+    if [[ "${OK_TO_CONTINUE}" != "yes" ]]; then
+        echo_err "You should type 'yes' to this question"
+        return 1
+    else
+        return 0
+    fi
+}
 
 get_device () {
 	DEVICE=$(readlink -e /dev/disk/by-id/$KNOWN_DISK)
@@ -161,9 +181,12 @@ is_subvolume_successfully_sent () {
 }
 
 get_snapshot_in_dest () {
-    # is_snap_already_sent $SRC_SNAP $DEST_SUBVOL
+    # get_snapshot_in_dest $SRC_SNAP $DEST_SUBVOL
     local src=$1
     local dest=$2
+    if [[ "$2" == "" ]]; then
+        echo_err "Usage: ${FUNCNAME[0]} src dest"
+    fi
     # if $dest_snap's received_uuid is the same as $src_snap's uuid, then
     # it means that the snapshot has already been sent.
     local dest_mount_point=$(mount_point_of $dest)
