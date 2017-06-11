@@ -5,6 +5,8 @@ TEST_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $TEST_DIR/tests-config.sh
 
 
+echo_green "* Configuring test..."
+
 if ! is_btrfs_subvolume $TEST_FOLDER; then
     echo_err "TEST_FOLDER should be a valid btrfs subvolume!"
 fi
@@ -16,11 +18,13 @@ fi
 
 prompt_yes_no "Using $TEST_FOLDER as \$TEST_FOLDER. Is that OK?"
 
-SRC_TEST_SUBVOLUMES="$TEST_DIR/test-subvolumes"
-echo "removing $SRC_TEST_SUBVOLUMES if possible"
-rm -rf $SRC_TEST_SUBVOLUMES 2> /dev/null
-echo "re-creating $SRC_TEST_SUBVOLUMES"
-mkdir $SRC_TEST_SUBVOLUMES || echo_err "Creating $SRC_TEST_SUBVOLUMES is not possible!"
+TEST_SUBS="$TEST_DIR/test-subvolumes"
+echo "removing $TEST_SUBS if possible"
+rm -rf $TEST_SUBS 2> /dev/null
+echo "re-creating $TEST_SUBS"
+mkdir $TEST_SUBS || echo_err "Creating $TEST_SUBS is not possible!"
 
 echo "clearing $TEST_FOLDER if possible"
 rm -rf $TEST_FOLDER/* 2> /dev/null
+
+echo_green "* Starting test..."

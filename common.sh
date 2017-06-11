@@ -29,6 +29,12 @@ echo_debug () {
 	echo -e "DEBUG: $*\n"
 }
 
+# http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
+
+echo_green () {
+    echo -e "\e[1;32m$*\e[0m"
+}
+
 prompt_yes_no () {
     local message=$1
     local OK_TO_CONTINUE="no"
