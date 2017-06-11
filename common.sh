@@ -221,3 +221,41 @@ mount_point_of () {
     local file=$1
     findmnt -n -o TARGET --target $file
 }
+
+is_snap_safe_to_del () {
+    # a snapshot can be deleted as much as there is at least one common
+    # snapshot is left between snapshot folders.
+    local snap_to_del=$1
+    local source_snaps=$2
+    if [[ "$2" == "" ]]; then
+        echo_err "Usage: ${FUNCNAME[0]} snap_to_del source_snaps_to_check"
+    fi
+
+    echo "snap to del: $snap_to_del"
+    echo "==========================================="
+    local the_last_snap_in_dest=""
+    local snap_in_dest=""
+    while read -a src; do
+        echo "scr is: $src"
+        snap_in_dest=$(get_snapshot_in_dest $src $(dirname $snap_to_del))
+        if [[ ! -z "$snap_in_dest" ]] && [[ "$snap_in_dest" != "$snap_to_del" ]]; then
+            echo "already sent snap found: $snap_in_dest"
+            the_last_snap_in_dest="$snap_in_dest"
+        else
+            if [[ -z "$snap_in_dest" ]]; then
+                echo "ERR: this snapshot is not in the destination"
+            else
+                echo "ERRRRR: This is the source snap already!!!"
+            fi
+        fi
+    done < <(snapshots_in $source_snaps)
+
+    if [[ ! -z "$the_last_snap_in_dest" ]]; then
+        echo "the last snap in dest: $the_last_snap_in_dest"
+        btrfs sub show $the_last_snap_in_dest
+        return 0
+    else
+        echo "ERROR: this snapshot is UNSAFE TO DELETE"
+        return 1
+    fi
+}
