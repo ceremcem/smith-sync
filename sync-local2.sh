@@ -10,10 +10,10 @@ done
 require_being_btrfs_subvolume $DEST_SNAP
 
 
-SOURCE_SNAPS="$SRC1_SNAP/$SRC1_SUB1"
-DESTINATION_SNAPS="$DEST_SNAP/$SRC1_SUB1"
-#SOURCE_SNAPS="$SRC2_SNAP/$SRC2_SUB1"
-#DESTINATION_SNAPS="$DEST_SNAP/$SRC2_SUB1"
+#SOURCE_SNAPS="$SRC1_SNAP/$SRC1_SUB1"
+#DESTINATION_SNAPS="$DEST_SNAP/$SRC1_SUB1"
+SOURCE_SNAPS="$SRC2_SNAP/$SRC2_SUB1"
+DESTINATION_SNAPS="$DEST_SNAP/$SRC2_SUB1"
 echo "Sendings snapshots from $SOURCE_SNAPS to $DESTINATION_SNAPS"
 echo "===================================================================="
 
@@ -44,7 +44,7 @@ while read -a src; do
         else
             # directly
             # simulating send (in order to show the total stream size)
-            btrfs send -v -p $ref_snapshot $src | pv > /dev/null
+            ####btrfs send -v -p $ref_snapshot $src | pv > /dev/null
             # actual transfer
             btrfs send -v -p $ref_snapshot $src | pv | btrfs receive $DESTINATION_SNAPS
         fi

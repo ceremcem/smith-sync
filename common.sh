@@ -9,6 +9,7 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/config.sh
 
+DEBUGGING=false
 
 echo_err () {
 	echo "ERROR:"
@@ -26,7 +27,13 @@ echo_info () {
 }
 
 echo_debug () {
-	echo -e "DEBUG: $*\n"
+    if $DEBUGGING; then
+        echo -e "DEBUG: $*"
+    fi
+}
+
+echo_cont ()  {
+    echo -ne "$*"
 }
 
 # http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
@@ -38,17 +45,19 @@ echo_green () {
 prompt_yes_no () {
     local message=$1
     local OK_TO_CONTINUE="no"
-    echo "--------------------------------------------------"
-    echo "                  YES / NO                        "
-    echo "--------------------------------------------------"
-    read -a OK_TO_CONTINUE -p "$message (yes/no) "
-    if [[ "${OK_TO_CONTINUE}" != "yes" ]]; then
-        echo_err "You should type 'yes' to this question"
-        return 1
-    else
-        return 0
-    fi
+    echo "----------------------  YES / NO  ----------------------"
+    while :; do
+        read -a OK_TO_CONTINUE -p "$message (yes/no) "
+        if [[ "${OK_TO_CONTINUE}" == "no" ]]; then
+            return 1
+        elif [[ "${OK_TO_CONTINUE}" == "yes" ]]; then
+            return 0
+        fi
+        echo "Please type 'yes' or 'no' (you said: $OK_TO_CONTINUE)"
+        sleep 1
+    done
 }
+
 
 get_device () {
 	DEVICE=$(readlink -e /dev/disk/by-id/$KNOWN_DISK)
@@ -87,7 +96,7 @@ decrypt_crypted_partition () {
 	if [[ "$1" != "" ]]; then
 		KEY="--key-file $1"
 	fi
-	cryptsetup $KEY luksOpen "${CRYPT_DEVICE}" "$D_DEVICE"
+	cryptsetup $KEY luksOpen "${CRYPT_DEVICE}" "$D_DEVICE" || echo_err "error while decrypting."
 }
 
 remove_lvm_parts () {
@@ -121,12 +130,38 @@ debug_step () {
 }
 
 snapshots_in () {
+    # usage: FUNC [--all]
+    local list_only_readonly=true
     local TARGET=$1
+    if [[ "$1" == "--all" ]]; then
+        list_only_readonly=false
+        TARGET=$2
+    fi
     while read -a file; do
         if is_btrfs_subvolume $file; then
-            echo $file
+            if $list_only_readonly; then
+                if is_subvolume_readonly $file; then
+                    echo $file
+                fi
+            else
+                echo $file
+            fi
         fi
     done < <( find $TARGET/ -maxdepth 1 -mindepth 1 )
+}
+
+is_subvolume_readonly () {
+    local subvol=$1
+    local readonly_flag="$(btrfs property get $subvol ro | grep ro= | awk -F= '{print $2}')"
+    if [[ "$readonly_flag" == "true" ]]; then
+        # yes, it is readonly
+        return 0
+    elif [[ "$readonly_flag" == "false" ]]; then
+        # no, it is writable
+        return 1
+    else
+        echo_err "${FUNCNAME[0]} can not determine if subvol is readonly or not!"
+    fi
 }
 
 last_snapshot_in () {
@@ -237,31 +272,37 @@ is_snap_safe_to_del () {
         echo_err "Usage: ${FUNCNAME[0]} snap_to_del source_snaps_to_check"
     fi
 
-    echo "snap to del: $snap_to_del"
-    echo "==========================================="
+    echo_debug "snap to del: $snap_to_del"
+    echo_debug "==========================================="
     local the_last_snap_in_dest=""
     local snap_in_dest=""
     while read -a src; do
-        echo "scr is: $src"
+        echo_debug "scr is: $src"
         snap_in_dest=$(get_snapshot_in_dest $src $(dirname $snap_to_del))
         if [[ ! -z "$snap_in_dest" ]] && [[ "$snap_in_dest" != "$snap_to_del" ]]; then
-            echo "already sent snap found: $snap_in_dest"
+            echo_debug "already sent snap found: $snap_in_dest"
             the_last_snap_in_dest="$snap_in_dest"
         else
             if [[ -z "$snap_in_dest" ]]; then
-                echo "ERR: this snapshot is not in the destination"
+                echo_debug "this snapshot ($src) is not in the destination"
             else
-                echo "ERRRRR: This is the source snap already!!!"
+                echo_debug "This is the source snap already!!!"
             fi
         fi
     done < <(snapshots_in $source_snaps)
 
     if [[ ! -z "$the_last_snap_in_dest" ]]; then
-        echo "the last snap in dest: $the_last_snap_in_dest"
-        btrfs sub show $the_last_snap_in_dest
+        echo_debug "the last snap in dest: $the_last_snap_in_dest"
+        echo_debug "$(btrfs sub show $the_last_snap_in_dest)"
         return 0
     else
-        echo "ERROR: this snapshot is UNSAFE TO DELETE"
+        echo_debug "ERROR: this snapshot is UNSAFE TO DELETE"
         return 1
     fi
+}
+
+take_snapshot () {
+    local src=$1
+    local dest=$2
+    btrfs sub snap -r "$src" "$dest"
 }

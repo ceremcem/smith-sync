@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Required to be run as root
+[[ $(id -u) > 0 ]] && { sudo $0 "$@"; exit 0; }
+
+TEST_NAME=$1
+
+set_dir () { DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"; }
+safe_source () { source $1; set_dir; }
+set_dir
+
+safe_source $DIR/tests-common.sh
+
+if [[ -z $TEST_NAME ]] || [[ ! -d "$DIR/$TEST_NAME" ]]; then
+    echo "TEST_NAME: $TEST_NAME"
+    echo_err "Usage: $0 my-test/ "
+fi
+if [[ ! -f "$DIR/$TEST_NAME/prepare.sh" ]]; then
+    echo_err "Your test should include a 'prepare.sh'"
+fi
+
+echo_green "* Starting  preparation of $TEST_NAME..."
+
+echo_green "Cleaning up test files first."
+while read -a src; do
+    btrfs sub delete $src
+done < <(snapshots_in --all $TEST_SUBS)
+while read -a src; do
+    btrfs sub delete $src
+done < <(snapshots_in --all $TEST_FOLDER)
+
+# Require test folders to be empty before preparation
+[ ! -z "$(ls -A $TEST_SUBS)" ] && echo_err "$TEST_SUBS should be empty!"
+[ ! -z "$(ls -A $TEST_FOLDER)" ] && echo_err "$TEST_FOLDER should be empty!"
+
+safe_source "$DIR/$TEST_NAME/prepare.sh"

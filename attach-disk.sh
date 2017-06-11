@@ -1,7 +1,9 @@
 #!/bin/bash
+set_dir () { DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"; }
+safe_source () { source $1; set_dir; }
+set_dir
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $DIR/common.sh
+safe_source $DIR/common.sh
 
 require_not_mounted $ROOT_MOUNT_POINT
 
