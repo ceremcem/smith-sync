@@ -13,3 +13,8 @@ assert_test $expected $result
 result=$(get_snapshot_in_dest $TEST_FOLDER/foo $TEST_SUBS)
 expected="$TEST_SUBS/a-1"
 assert_test $expected $result
+
+btrfs sub delete $TEST_FOLDER/foo
+result=$(get_snapshot_in_dest $TEST_FOLDER/a-2 $TEST_SUBS)
+expected="$TEST_SUBS/a-2"
+assert_test $expected $result

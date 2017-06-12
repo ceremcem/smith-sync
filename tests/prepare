@@ -11,7 +11,7 @@ set_dir
 
 safe_source $DIR/tests-common.sh
 
-echo_green "* Starting  preparation of $TEST_NAME..."
+echo_green "* Starting  preparation of $TEST_SCRIPT_DIR #$TEST_SCRIPT_NUM..."
 
 echo_green "Cleaning up test files first."
 while read -a src; do

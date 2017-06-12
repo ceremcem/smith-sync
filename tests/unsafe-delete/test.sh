@@ -1,8 +1,11 @@
 
+DEBUG=true
 echo "Deleting all snapshots in $TEST_FOLDER"
 while read -a snap; do
     if is_snap_safe_to_del $snap $TEST_SUBS; then
         echo "APP: it is safe to delete $snap"
+        echo btrfs sub delete $snap
+        debug_step
         btrfs sub delete $snap
     else
         echo "APP: it is NOT SAFE to delete $snap!"

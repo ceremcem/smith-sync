@@ -12,11 +12,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DEBUG=false
 
 echo_err () {
-	echo "ERROR:"
-	echo "ERROR:"
-	echo "ERROR: $* "
-	echo "ERROR:"
-	echo "ERROR:"
+	>&2 echo "ERROR:"
+	>&2 echo "ERROR:"
+	>&2 echo "ERROR: $* "
+	>&2 echo "ERROR:"
+	>&2 echo "ERROR:"
 	exit 1
 }
 
@@ -28,7 +28,7 @@ echo_info () {
 
 echo_debug () {
     if $DEBUG; then
-        echo -e "DEBUG: $*"
+        >&2 echo -e "DEBUG: $*"
     fi
 }
 
@@ -79,7 +79,8 @@ get_timestamp () {
 }
 
 is_btrfs_subvolume() {
-    btrfs subvolume show "$1" >/dev/null 2>&1
+    local subvol=$1
+    btrfs subvolume show "$subvol" >/dev/null 2>&1
 }
 
 
@@ -230,25 +231,47 @@ get_snapshot_in_dest () {
     if [[ "$2" == "" ]]; then
         echo_err "Usage: ${FUNCNAME[0]} src dest"
     fi
+
+    #DEBUG=true
+
+
+    #echo_debug "${FUNCNAME[0]}: src: $src, dest: $dest"
     # if $dest_snap's received_uuid is the same as $src_snap's uuid, then
     # it means that these snapshots are identical.
     local dest_mount_point=$(mount_point_of $dest)
-    local snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $(get_btrfs_uuid $src) )
-    if [[ "$snap_already_sent" != "" ]]; then
-        snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
-        echo "$(readlink -m $snap_found)"
-        return 0
+    local uuid_of_src="$(get_btrfs_uuid $src)"
+    local snap_already_sent=""
+
+    echo_debug "uuid_of_src: $uuid_of_src"
+    echo_debug "dest_mount_point: $dest_mount_point"
+
+    if [[ ! -z $uuid_of_src ]]; then
+        snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $uuid_of_src )
+        echo_debug "snap already sent: $snap_already_sent"
+
+        if [[ "$snap_already_sent" != "" ]]; then
+            snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
+            echo "$(readlink -m $snap_found)"
+            return 0
+        fi
     fi
 
     # try the reverse
-    dest_mount_point=$(mount_point_of $dest)
-    snap_already_sent=$(btrfs sub list -u $dest_mount_point | grep $(get_btrfs_received_uuid $src) )
-    if [[ "$snap_already_sent" != "" ]]; then
-        snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
-        echo "$(readlink -m  $snap_found)"
-        return 0
-    fi
+    local received_uuid_of_local="$(get_btrfs_received_uuid $src)"
+    if [[ ! -z $received_uuid_of_local ]]; then
+        dest_mount_point=$(mount_point_of $dest)
+        snap_already_sent=$(btrfs sub list -u $dest_mount_point | grep "$received_uuid_of_local" )
 
+        echo_debug "received_uuid_of_local: $received_uuid_of_local"
+        echo_debug "dest_mount_point: $dest_mount_point"
+        echo_debug "snap already sent: $snap_already_sent"
+
+        if [[ "$snap_already_sent" != "" ]]; then
+            snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
+            echo "$(readlink -m  $snap_found)"
+            return 0
+        fi
+    fi
 }
 
 
@@ -261,17 +284,23 @@ get_line_field () {
 
 get_btrfs_received_uuid () {
     local subvol=$1
-    btrfs sub show $subvol | grep "Received UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+    local uuid=$(btrfs sub show $subvol | grep "Received UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g")
+    [ $? -ne 0 ] && echo_err "in ${FUNCNAME[0]}"
+    [ ${#uuid} -eq 36 ] && echo $uuid
 }
 
 get_btrfs_uuid () {
     local subvol=$1
-    btrfs sub show $subvol | grep "^\s*UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+    local uuid=$(btrfs sub show $subvol | grep "^\s*UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g")
+    [ $? -ne 0 ] && echo_err "in ${FUNCNAME[0]}"
+    [ ${#uuid} -eq 36 ] && echo $uuid
 }
 
 get_btrfs_parent_uuid () {
     local subvol=$1
-    btrfs sub show $subvol | grep "Parent UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g"
+    local uuid=$(btrfs sub show $subvol | grep "Parent UUID:" | awk -F: '{print $2}' | sed -e "s/\s//g")
+    [ $? -ne 0 ] && echo_err "in ${FUNCNAME[0]}"
+    [ ${#uuid} -eq 36 ] && echo $uuid
 }
 
 mount_point_of () {
@@ -288,7 +317,7 @@ is_snap_safe_to_del () {
         echo_err "Usage: ${FUNCNAME[0]} snap_to_del source_snaps_to_check"
     fi
 
-    DEBUG=true
+    #DEBUG=true
     echo_debug "snap to del: $snap_to_del"
     echo_debug "==========================================="
     local the_last_snap_in_dest=""
@@ -296,7 +325,7 @@ is_snap_safe_to_del () {
     while read -a src; do
         echo_debug "scr is: $src"
         snap_in_dest=$(get_snapshot_in_dest $src $(dirname $snap_to_del))
-        echo_debug "snap_in_dest is: $snap_in_dest"
+        echo_debug "snap_in_dest is: $snap_in_dest (src: $src, dest: $(dirname $snap_to_del))"
         if [[ ! -z "$snap_in_dest" ]] && [[ "$snap_in_dest" != "$snap_to_del" ]]; then
             echo_debug "already sent snap found: $snap_in_dest"
             the_last_snap_in_dest="$snap_in_dest"
@@ -311,10 +340,10 @@ is_snap_safe_to_del () {
 
     if [[ ! -z "$the_last_snap_in_dest" ]]; then
         echo_debug "the last snap in dest: $the_last_snap_in_dest"
-        echo_debug "$(btrfs sub show $the_last_snap_in_dest)"
+        echo_debug "$(echo btrfs sub show $the_last_snap_in_dest)"
         return 0
     else
-        echo_debug "ERROR: this snapshot is UNSAFE TO DELETE"
+        echo_debug "this snapshot is UNSAFE TO DELETE"
         return 1
     fi
 }
