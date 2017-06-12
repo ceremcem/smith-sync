@@ -93,6 +93,21 @@ get_timestamp () {
 	date +%Y%m%dT%H%M
 }
 
+start_timer () {
+    echo_blue "(timer started)"
+    start_date=$(date +%s)
+}
+
+show_timer () {
+    local message="$*"
+    if [[ -z $message ]]; then
+        message="Duration: "
+    fi
+    end_date=$(date +%s)
+    local time_diff=$(date -u -d "0 $end_date seconds - $start_date seconds" +"%H:%M:%S")
+    echo_blue "$message $time_diff"
+}
+
 is_btrfs_subvolume() {
     local subvol=$1
     btrfs subvolume show "$subvol" >/dev/null 2>&1
@@ -498,4 +513,82 @@ cleanup_src_snapshots_by_disk_space () {
             echo "IT IS NOT SAFE TO DELETE $snap"
         fi
     done < <(snapshots_in $SRC_SNAPSHOTS)
+}
+
+btrfs_send_diff () {
+    local parent=$1
+    local current=$2
+    if [[ -z $current ]]; then
+        echo_yellow "No parent specified, sending whole snapshot"
+        current=$1
+        btrfs send $current
+    else
+        echo_green "Sending difference between $parent and $current"
+        btrfs send -p $parent $current
+    fi
+}
+
+send_all_snapshots () {
+    local SOURCE_SNAPS=$1
+    local DESTINATION_SNAPS=$2
+
+    echo_blue "Sendings snapshots from $SOURCE_SNAPS to $DESTINATION_SNAPS"
+    echo_blue "===================================================================="
+
+    local ref_snapshot=""
+    while read -a src; do
+        if [[ "$(get_snapshot_in_dest $src $DESTINATION_SNAPS)" != "" ]]; then
+            echo "$src exists in destination, no need to send again."
+            ref_snapshot=$src
+            #breakpoint
+        else
+            echo "$src will be sent to destination."
+            # Minimum difference algorithm:
+            # --------------------------------
+            # since this utility is designed to send incremental backups, most
+            # probably the minimum amount of difference will be optained between the
+            # previous snapshot which has been successfully sent to the destination
+            # and this one.
+
+            #breakpoint
+            dest_snap_path="$DESTINATION_SNAPS/$(basename $src)"
+
+            if is_btrfs_subvolume $dest_snap_path; then
+                echo "trying to rename to backup the $dest_snap_path in destination."
+                mv $dest_snap_path "$dest_snap_path.backup-$(get_timestamp)"
+            fi
+
+            if false; then
+                # transfer over dump file
+                # ------------------
+                tmp_file="/home/ceremcem/tmp/$(basename $src)"
+                btrfs send -v -p $ref_snapshot -f $tmp_file $src || echo_err "Problem in btrfs send"
+                btrfs receive -f $tmp_file $DESTINATION_SNAPS
+                echo "DO NOT FORGET TO REMOVE $tmp_file"
+            else
+                # directly transfer
+                # ------------------
+
+                # estimate the size
+                #estimate_btrfs_send_size $ref_snapshot $src
+
+                # transfer
+                btrfs_send_diff $ref_snapshot $src | pv | btrfs receive $DESTINATION_SNAPS
+
+                ref_snapshot="$(get_snapshot_in_dest $src $DESTINATION_SNAPS)"
+                echo_info "Setting new reference snapshot as $ref_snapshot"
+                #breakpoint
+            fi
+        fi
+
+        echo_red "--------------------------------------------------------------------"
+        continue
+        if is_subvolume_successfully_sent $dest; then
+            echo "subvol ok"
+        else
+            echo "subvol will be deleted"
+            echo btrfs sub delete $snap
+        fi
+
+    done < <(snapshots_in $SOURCE_SNAPS)
 }
