@@ -25,9 +25,6 @@ if [[ "$TEST_SCRIPT_DIR" == "." ]]; then
     TEST_SCRIPT_NUM=""
 fi
 
-echo "Test script dir is: $TEST_SCRIPT_DIR"
-echo "Test script num is: $TEST_SCRIPT_NUM"
-
 if [[ -z $TEST_SCRIPT_DIR ]] || [[ ! -d "$DIR/$TEST_SCRIPT_DIR" ]]; then
     echo_err "Usage: $0 my-test/[test_number] "
 fi
