@@ -9,7 +9,7 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/config.sh
 
-DEBUGGING=false
+DEBUG=false
 
 echo_err () {
 	echo "ERROR:"
@@ -27,7 +27,7 @@ echo_info () {
 }
 
 echo_debug () {
-    if $DEBUGGING; then
+    if $DEBUG; then
         echo -e "DEBUG: $*"
     fi
 }
@@ -125,12 +125,13 @@ require_being_btrfs_subvolume () {
 
 debug_step () {
     if $DEBUG; then
-        read -p "Reached debug step. Press enter to continue..."
+        echo -en "Reached debug step. Press enter to continue..."
+        read hello </dev/tty
     fi
 }
 
 snapshots_in () {
-    # usage: FUNC [--all]
+    # usage: FUNC [--all] directory
     local list_only_readonly=true
     local TARGET=$1
     if [[ "$1" == "--all" ]]; then
@@ -287,6 +288,7 @@ is_snap_safe_to_del () {
         echo_err "Usage: ${FUNCNAME[0]} snap_to_del source_snaps_to_check"
     fi
 
+    DEBUG=true
     echo_debug "snap to del: $snap_to_del"
     echo_debug "==========================================="
     local the_last_snap_in_dest=""
@@ -294,6 +296,7 @@ is_snap_safe_to_del () {
     while read -a src; do
         echo_debug "scr is: $src"
         snap_in_dest=$(get_snapshot_in_dest $src $(dirname $snap_to_del))
+        echo_debug "snap_in_dest is: $snap_in_dest"
         if [[ ! -z "$snap_in_dest" ]] && [[ "$snap_in_dest" != "$snap_to_del" ]]; then
             echo_debug "already sent snap found: $snap_in_dest"
             the_last_snap_in_dest="$snap_in_dest"
