@@ -235,7 +235,7 @@ get_snapshot_in_dest () {
     local snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $(get_btrfs_uuid $src) )
     if [[ "$snap_already_sent" != "" ]]; then
         snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
-        echo "$(realpath $snap_found)"
+        echo "$(readlink -m $snap_found)"
         return 0
     fi
 
@@ -244,7 +244,7 @@ get_snapshot_in_dest () {
     snap_already_sent=$(btrfs sub list -u $dest_mount_point | grep $(get_btrfs_received_uuid $src) )
     if [[ "$snap_already_sent" != "" ]]; then
         snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
-        echo "$(realpath $snap_found)"
+        echo "$(readlink -m  $snap_found)"
         return 0
     fi
 
