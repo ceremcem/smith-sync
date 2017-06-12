@@ -15,6 +15,6 @@ fits **my own use case**, which will provide anyone write their own tools
 
 # Disclaimer
 
-This library and tools are in very early stage (even though I use these tools everyday for my own backups) and you **SHOULD** take appropriate actions in order not to loose your backups and even your system. 
+Althoug I use these tools in my everyday backup tasks, this library and tools are in very early stage and you **SHOULD** take appropriate actions in order not to loose/destroy your backups and even your operating system. 
 
 **DO NOT USE THESE TOOLS UNLESS YOU READ AND UNDERSTAND THEM!**
