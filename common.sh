@@ -413,8 +413,8 @@ assert_test () {
 get_free_space_of_snap () {
     # returns in KBytes
     local snap=$1
-    echo_info "Calculating free space of $(mount_point_of $snap)"
-    df -k --sync --output=avail $snap | sed '2q;d'
+    #echo_info "Calculating free space of $(mount_point_of $snap)"
+    df -k --output=avail $snap | sed '2q;d'
 }
 
 is_free_space_more_than () {
@@ -432,4 +432,70 @@ is_free_space_more_than () {
         echo_debug "Free space is NOT enough..."
         return 1
     fi
+}
+
+cleanup_dest_snapshots_by_disk_space () {
+    local required_space=$1
+    local SRC_SNAPSHOTS=$2
+    local DEST_SNAPSHOTS=$3
+
+    [ -z $DEST_SNAPSHOTS ] && echo_err "Usage: ${FUNCNAME[0]} size[M/G] src/ dest-to-delete/"
+
+    echo_green "Getting incomplete snapshots in $DEST_SNAPSHOTS"
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+        fi
+    done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
+
+    echo_yellow "Deleting incomplete snapshots in $DEST_SNAPSHOTS"
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+            btrfs sub delete $snap
+        fi
+    done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
+
+    echo_yellow "Checking if we can delete from $DEST_SNAPSHOTS"
+
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+            if is_free_space_more_than $required_space $DEST_SNAPSHOTS; then
+                echo "Free space is more than $required_space"
+                break
+            else
+                echo "Free space is lower than $required_space, deleting $snap"
+                breakpoint
+                btrfs sub delete "$snap"
+            fi
+        else
+            echo "IT IS NOT SAFE TO DELETE $snap"
+        fi
+    done < <(snapshots_in $DEST_SNAPSHOTS)
+}
+
+cleanup_src_snapshots_by_disk_space () {
+    local required_space=$1
+    local SRC_SNAPSHOTS=$2
+    local DEST_SNAPSHOTS=$3
+
+    [ -z $DEST_SNAPSHOTS ] && echo_err "Usage: ${FUNCNAME[0]} size[M/G] src-to-delete/ dest-to-check/"
+
+    echo_yellow "Checking if we can delete from $SRC_SNAPSHOTS"
+
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $DEST_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+            if is_free_space_more_than $required_space $SRC_SNAPSHOTS; then
+                echo "Free space is more than $required_space"
+                break
+            else
+                echo "Free space is lower than $required_space, deleting $snap"
+                btrfs sub delete "$snap"
+            fi
+        else
+            echo "IT IS NOT SAFE TO DELETE $snap"
+        fi
+    done < <(snapshots_in $SRC_SNAPSHOTS)
 }

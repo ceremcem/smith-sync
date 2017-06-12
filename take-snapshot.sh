@@ -16,6 +16,6 @@ take_snapshot "$SRC2/$SRC2_SUB1" "$SRC2_SNAP/$SRC2_SUB1/$SRC2_SUB1.$TIMESTAMP"
 
 echo "Putting last snapshot in rollback location ($ROLLBACK_SNAPSHOT)"
 new_rollback_path="$SRC1_SNAP/$SRC1_SUB1/$new_rollback_snapshot"
-exit
-btrfs sub delete $ROLLBACK_SNAPSHOT
-btrfs sub snap $new_rollback_path $ROLLBACK_SNAPSHOT
+
+echo_red btrfs sub delete $ROLLBACK_SNAPSHOT
+echo_red btrfs sub snap $new_rollback_path $ROLLBACK_SNAPSHOT
