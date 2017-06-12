@@ -11,24 +11,26 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 DEBUG=false
 
+errcho () {
+    >&2 echo -e "$*"
+}
+
 echo_err () {
-	>&2 echo "ERROR:"
-	>&2 echo "ERROR:"
-	>&2 echo "ERROR: $* "
-	>&2 echo "ERROR:"
-	>&2 echo "ERROR:"
+	errcho "ERROR:"
+	errcho "ERROR:"
+	errcho "ERROR: $* "
+	errcho "ERROR:"
+	errcho "ERROR:"
 	exit 1
 }
 
 echo_info () {
-	echo "INFO:"
-	echo "INFO: $* "
-	echo "INFO:"
+	errcho "INFO: $* "
 }
 
 echo_debug () {
     if $DEBUG; then
-        >&2 echo -e "DEBUG: $*"
+        errcho "DEBUG: $*"
     fi
 }
 
@@ -39,18 +41,18 @@ echo_cont ()  {
 # http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
 
 echo_green () {
-    echo -e "\e[1;32m$*\e[0m"
+    errcho "\e[1;32m$*\e[0m"
 }
 
 echo_blue () {
-    echo -e "\e[1;34m$*\e[0m"
+    errcho "\e[1;34m$*\e[0m"
 }
 
 echo_yellow () {
-    echo -e "\e[1;33m$*\e[0m"
+    errcho "\e[1;33m$*\e[0m"
 }
 echo_red () {
-    echo -e "\e[1;31m$*\e[0m"
+    errcho "\e[1;31m$*\e[0m"
 }
 
 
@@ -411,6 +413,7 @@ assert_test () {
 get_free_space_of_snap () {
     # returns in KBytes
     local snap=$1
+    echo_info "Calculating free space of $(mount_point_of $snap)"
     df -k --sync --output=avail $snap | sed '2q;d'
 }
 
