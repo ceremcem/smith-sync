@@ -9,13 +9,14 @@ cleanup_snapshots_by_disk_space () {
     local SRC_SNAPSHOTS=$2
     local DEST_SNAPSHOTS=$3
 
-    echo_green "Checking for incomplete snapshots in $DEST_SNAPSHOTS"
+    echo_green "Getting incomplete snapshots in $DEST_SNAPSHOTS"
     while read -a snap; do
         if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
             echo "it is safe to delete $snap"
         fi
     done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
 
+    echo_yellow "Deleting incomplete snapshots in $DEST_SNAPSHOTS"
     while read -a snap; do
         if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
             echo "it is safe to delete $snap"
@@ -23,7 +24,7 @@ cleanup_snapshots_by_disk_space () {
         fi
     done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
 
-    echo "Checking if we can delete from $DEST_SNAPSHOTS"
+    echo_yellow "Checking if we can delete from $DEST_SNAPSHOTS"
 
     while read -a snap; do
         if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
@@ -46,7 +47,7 @@ cleanup_snapshots_by_disk_space () {
     done < <(snapshots_in $DEST_SNAPSHOTS)
 }
 
-needed_space="300G"
+needed_space="200G"
 echo_green "Starting cleanup to make $needed_space of free space in $(mount_point_of $DEST_SNAP)"
 
 cleanup_snapshots_by_disk_space $needed_space "$SRC2_SNAP/$SRC2_SUB1" "$DEST_SNAP/$SRC2_SUB1"
