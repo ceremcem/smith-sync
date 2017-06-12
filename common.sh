@@ -124,32 +124,57 @@ require_being_btrfs_subvolume () {
     fi
 }
 
-debug_step () {
-    if $DEBUG; then
-        echo -en "Reached debug step. Press enter to continue..."
-        read hello </dev/tty
-    fi
+breakpoint () {
+    echo -en "Reached debug step. Press enter to continue..."
+    read hello </dev/tty
 }
 
 snapshots_in () {
-    # usage: FUNC [--all] directory
+    # usage: FUNC [options] directory
+    # --all         : list all subvolumes, not only readonly ones
+    # --incomplete  : list only incomplete snapshots ()
     local list_only_readonly=true
+    local list_only_incomplete=false
     local TARGET=$1
     if [[ "$1" == "--all" ]]; then
-        list_only_readonly=false
         TARGET=$2
+        list_only_readonly=false
+    elif [[ "$1" == "--incomplete" ]]; then
+        TARGET=$2
+        list_only_readonly=false
+        list_only_incomplete=true
     fi
-    while read -a file; do
-        if is_btrfs_subvolume $file; then
+
+    while read -a snap; do
+        if is_btrfs_subvolume $snap; then
             if $list_only_readonly; then
-                if is_subvolume_readonly $file; then
-                    echo $file
+                if is_subvolume_readonly $snap; then
+                    echo $snap
                 fi
             else
-                echo $file
+                if $list_only_incomplete; then
+                    if is_subvolume_incomplete $snap; then
+                        echo $snap
+                    fi
+                else
+                    echo $snap
+                fi
             fi
         fi
     done < <( find $TARGET/ -maxdepth 1 -mindepth 1 )
+}
+
+is_subvolume_incomplete () {
+    local subvol=$1
+    #DEBUG=true
+    if [[ "$(get_btrfs_received_uuid $subvol)" == "" ]]; then
+        echo_debug "$subvol is incomplete"
+        return 0
+    else
+        echo_debug "$subvol is complete"
+        return 1
+    fi
+    #DEBUG=false
 }
 
 is_subvolume_readonly () {
@@ -247,7 +272,7 @@ get_snapshot_in_dest () {
 
     if [[ ! -z $uuid_of_src ]]; then
         snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $uuid_of_src )
-        echo_debug "snap already sent: $snap_already_sent"
+        echo_debug "snap already sent (raw): $snap_already_sent"
 
         if [[ "$snap_already_sent" != "" ]]; then
             snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
@@ -264,7 +289,7 @@ get_snapshot_in_dest () {
 
         echo_debug "received_uuid_of_local: $received_uuid_of_local"
         echo_debug "dest_mount_point: $dest_mount_point"
-        echo_debug "snap already sent: $snap_already_sent"
+        echo_debug "snap already sent (raw): $snap_already_sent"
 
         if [[ "$snap_already_sent" != "" ]]; then
             snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
@@ -367,5 +392,28 @@ assert_test () {
         echo_err "Test failed! (expected: $expected, result: $result)"
     else
         echo_green "Test passed..."
+    fi
+}
+
+get_free_space_of_snap () {
+    # returns in KBytes
+    local snap=$1
+    df -k --sync --output=avail $snap | sed '2q;d'
+}
+
+is_free_space_more_than () {
+    local target_size_str=$1
+    local target_size=$(echo $target_size_str | numfmt --from=si)
+    target_size=$(( $target_size / 1000 ))
+    local snap=$2
+    local curr_size=$(get_free_space_of_snap $snap)
+
+    echo_debug "target_size: $target_size ($target_size_str), curr_size: $curr_size"
+    if (( "$curr_size" >= "$target_size" )); then
+        echo_debug "Free space is enough."
+        return 0
+    else
+        echo_debug "Free space is NOT enough..."
+        return 1
     fi
 }

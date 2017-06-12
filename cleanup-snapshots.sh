@@ -3,14 +3,53 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/common.sh
 
+cleanup_snapshots_by_disk_space () {
+    # usage FUNCTION 250G /path/to/src-snapshots /path/to/dest-snapshots-which-will-be-deleted
+    local required_space=$1
+    local SRC_SNAPSHOTS=$2
+    local DEST_SNAPSHOTS=$3
 
-THE_SRC="/mnt/heybe/snapshots/cca-heybe"
-MY_SAFE_DEL_SNAP="/mnt/zencefil/snapshots/cca-heybe/cca-heybe.20170524T0618"
+    echo_green "Checking for incomplete snapshots in $DEST_SNAPSHOTS"
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+        fi
+    done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
 
-# no safe because at the same location
-MY_NO_SAFE_DEL_SNAP1="/mnt/heybe/snapshots/cca-heybe/cca-heybe.20170524T0618"
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+            btrfs sub delete $snap
+        fi
+    done < <(snapshots_in --incomplete $DEST_SNAPSHOTS)
 
-THE_SNAP_TO_DEL=$MY_SAFE_DEL_SNAP
+    echo "Checking if we can delete from $DEST_SNAPSHOTS"
 
+    while read -a snap; do
+        if is_snap_safe_to_del $snap $SRC_SNAPSHOTS; then
+            echo "it is safe to delete $snap"
+            #wait_for_calculation="60s"
+            wait_for_calculation="5s"
+            echo "Sleeping for $wait_for_calculation in order to update free space..."
+            sleep $wait_for_calculation
+            if is_free_space_more_than $required_space $DEST_SNAPSHOTS; then
+                echo "Free space is more than $required_space"
+                break
+            else
+                echo "Free space is lower than $required_space, deleting $snap"
+                breakpoint
+                btrfs sub delete "$snap"
+            fi
+        else
+            echo "IT IS NOT SAFE TO DELETE $snap"
+        fi
+    done < <(snapshots_in $DEST_SNAPSHOTS)
+}
 
-is_snap_safe_to_del $THE_SNAP_TO_DEL $THE_SRC
+needed_space="300G"
+echo_green "Starting cleanup to make $needed_space of free space in $(mount_point_of $DEST_SNAP)"
+
+cleanup_snapshots_by_disk_space $needed_space "$SRC2_SNAP/$SRC2_SUB1" "$DEST_SNAP/$SRC2_SUB1"
+cleanup_snapshots_by_disk_space $needed_space "$SRC1_SNAP/$SRC1_SUB1" "$DEST_SNAP/$SRC1_SUB1"
+
+echo_green "Cleanup done, current free space: $(get_free_space_of_snap $DEST_SNAP) K"
