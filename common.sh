@@ -222,20 +222,35 @@ is_subvolume_successfully_sent () {
 }
 
 get_snapshot_in_dest () {
-    # get_snapshot_in_dest $SRC_SNAP $DEST_SUBVOL
+    # get_snapshot_in_dest snapshot remote_folder
     local src=$1
     local dest=$2
+    local snap_found=""
     if [[ "$2" == "" ]]; then
         echo_err "Usage: ${FUNCNAME[0]} src dest"
     fi
     # if $dest_snap's received_uuid is the same as $src_snap's uuid, then
-    # it means that the snapshot has already been sent.
+    # it means that these snapshots are identical.
     local dest_mount_point=$(mount_point_of $dest)
     local snap_already_sent=$(btrfs sub list -R $dest_mount_point | grep $(get_btrfs_uuid $src) )
     if [[ "$snap_already_sent" != "" ]]; then
-        echo "$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
+        snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
+        echo "$(realpath $snap_found)"
+        return 0
     fi
+
+    # try the reverse
+    dest_mount_point=$(mount_point_of $dest)
+    snap_already_sent=$(btrfs sub list -u $dest_mount_point | grep $(get_btrfs_received_uuid $src) )
+    if [[ "$snap_already_sent" != "" ]]; then
+        snap_found="$dest_mount_point/$(echo $snap_already_sent | get_line_field 'path')"
+        echo "$(realpath $snap_found)"
+        return 0
+    fi
+
 }
+
+
 
 get_line_field () {
     # returns the word after a specific $field in a line
@@ -264,8 +279,8 @@ mount_point_of () {
 }
 
 is_snap_safe_to_del () {
-    # a snapshot can be deleted as much as there is at least one common
-    # snapshot is left between snapshot folders.
+    # a snapshot can be deleted as long as there is at least one common
+    # reference snapshot left in both snapshot folders.
     local snap_to_del=$1
     local source_snaps=$2
     if [[ "$2" == "" ]]; then
@@ -305,4 +320,20 @@ take_snapshot () {
     local src=$1
     local dest=$2
     btrfs sub snap -r "$src" "$dest"
+}
+
+dirname_two () {
+    # return the last 2 portions of dirname:
+    local param=$1
+    echo "$(basename $(dirname $param))/$(basename $param)"
+}
+
+assert_test () {
+    local expected=$1
+    local result=$2
+    if [[ "$expected" != "$result" ]]; then
+        echo_err "Test failed! (expected: $expected, result: $result)"
+    else
+        echo_green "Test passed..."
+    fi
 }

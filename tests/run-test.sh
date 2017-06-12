@@ -8,4 +8,6 @@ safe_source () { source $1; set_dir; }
 set_dir
 
 safe_source $DIR/tests-common.sh
+
+echo_green "--------------- Running $TEST_SCRIPT_DIR/test${TEST_SCRIPT_NUM}.sh --------------------"
 safe_source $DIR/$TEST_SCRIPT_DIR/test${TEST_SCRIPT_NUM}.sh
