@@ -42,6 +42,19 @@ echo_green () {
     echo -e "\e[1;32m$*\e[0m"
 }
 
+echo_blue () {
+    echo -e "\e[1;34m$*\e[0m"
+}
+
+echo_yellow () {
+    echo -e "\e[1;33m$*\e[0m"
+}
+echo_red () {
+    echo -e "\e[1;31m$*\e[0m"
+}
+
+
+
 prompt_yes_no () {
     local message=$1
     local OK_TO_CONTINUE="no"
