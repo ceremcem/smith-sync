@@ -11,15 +11,15 @@ send_all_snapshots () {
         if [[ -z $ref ]]; then
             echo_red "not setting ref as empty string, skipping!"
         else
-            echo_yellow "ref_snapshot = $ref"
+            #echo_yellow "ref_snapshot = $ref"
             ref_snapshot=$ref
         fi
     }
 
     while read -a src; do
-        echo_green "------------------->>> $src -----------------------------"
+        #echo_info "------------------->>> $src -----------------------------"
         if [[ "$(get_snapshot_in_dest $src $DESTINATION_SNAPS)" != "" ]]; then
-            echo "$src exists in destination, no need to send again."
+            echo_green "[\u2713] $src exists in destination, no need to send again."
             set_reference $src
             #breakpoint
         else
