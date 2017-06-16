@@ -13,7 +13,7 @@ require_being_btrfs_subvolume $DEST_SNAP
 echo_green "Started sync-local"
 
 send_all_snapshots "$SRC1_SNAP/$SRC1_SUB1" "$DEST_SNAP/$SRC1_SUB1"
-show_timer "sync of $SRC1_SNAP completed"
+show_timer "sync of $SRC1_SNAP completed in"
 
 send_all_snapshots "$SRC2_SNAP/$SRC2_SUB1" "$DEST_SNAP/$SRC2_SUB1"
-show_timer "Synchronization finished."
+show_timer "Synchronization finished in"

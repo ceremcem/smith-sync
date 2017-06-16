@@ -9,14 +9,14 @@ btrfs_send_diff () {
         else
             echo "Skipped sending $current"
             return
-        fi 
+        fi
     else
         echo_green "Sending difference between $parent and $current"
         if [[ "$(mount_point_of $parent)" != "$(mount_point_of $current)" ]]; then
             echo_red "USAGE PROBLEM: parent and current snapshots should reside at the same disk!"
             return 255
         fi
-        btrfs send -p $parent --no-data $current > /dev/null
+        btrfs send -p $parent --no-data $current 2> /dev/null > /dev/null
         if [[ $? != 0 ]]; then
             echo_red "WE DETECT AN ERROR in ${FUNCNAME[0]}! parent: $parent, curr: $current"
             echo_red "Command was: btrfs send -p $parent --no-data $current"
