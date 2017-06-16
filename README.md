@@ -11,7 +11,7 @@ end up writing their own wrapper scripts around these tools to make their tasks 
 This library is intended to provide API first and then some specific tools that
 fits **only my own use case**, which will provide enough API functions in order to let anyone write their own tools
 
-![image](https://user-images.githubusercontent.com/6639874/27061927-4cd8615a-4ff0-11e7-8dd0-c26238bb50e8.png)
+![image](https://user-images.githubusercontent.com/6639874/27219245-ad96ae66-5289-11e7-804f-61696e89a32f.png)
 
 # Disclaimer
 
