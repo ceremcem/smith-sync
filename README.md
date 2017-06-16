@@ -4,14 +4,12 @@ Backup systems requires many actions, starting from attaching physical disk(s),
 decrypting and/or mounting partitions, sending changes, generating logs, cleanup,
 etc...
 
-There are lots of tools (especially specialized for BTRFS filesystems) which are
-designed for very specific use case.
-
-Any system admin may require different ways to make backups, where they would likely
-end up writing their own wrapper scripts to make tasks done.
+There are lots of tools (especially the ones that are specialized for BTRFS filesystems) which are
+designed for a very specific use case, probably that fits the toolset author's case. Any system admin may require different ways to make backups, where they would likely
+end up writing their own wrapper scripts around these tools to make their tasks done.
 
 This library is intended to provide API first and then some specific tools that
-fits **my own use case**, which will provide anyone write their own tools
+fits **only my own use case**, which will provide enough API functions in order to let anyone write their own tools
 
 ![image](https://user-images.githubusercontent.com/6639874/27061927-4cd8615a-4ff0-11e7-8dd0-c26238bb50e8.png)
 
