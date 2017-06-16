@@ -55,7 +55,7 @@ send_all_snapshots () {
 
                 # transfer
                 btrfs_send_diff $ref_snapshot $src | pv | btrfs receive $DESTINATION_SNAPS
-                set_reference "$(get_snapshot_in_dest $src $DESTINATION_SNAPS)"
+                set_reference $src
             fi
         fi
     done < <(snapshots_in $SOURCE_SNAPS)
