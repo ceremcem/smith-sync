@@ -1,7 +1,12 @@
 #!/bin/bash
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $DIR/common.sh
+set_dir () { DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"; }
+safe_source () { source $1; set_dir; }
+set_dir
+
+safe_source $DIR/../common.sh
+safe_source $DIR/config.sh
+
 start_timer
 
 # check if rollback_snapshot is mounted or not, because we don't want
