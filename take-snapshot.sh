@@ -14,6 +14,8 @@ btrfs sub snap / $ROLLBACK_SNAPSHOT
 btrfs sub delete $ROLLBACK_SNAPSHOT.del
 show_timer "Current rootfs is now in rollback location."
 
+echo_green "Backing up /boot partition"
+rsync -avrP /boot/ /boot.backup/
 
 echo_green "Taking Snapshots..."
 POSTFIX=$(get_timestamp)
