@@ -7,7 +7,6 @@ if [[ $(id -u) > 0 ]]; then
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $DIR/config.sh
 
 DEBUG=false
 

@@ -23,7 +23,13 @@ ROOT_MOUNT_POINT="/mnt/${ROOT_NAME}"
 D_DEVICE="${ROOT_NAME}_crypt"  # decrypted device name
 D_DEVICE_PATH="/dev/mapper/$D_DEVICE"
 DEST="$ROOT_MOUNT_POINT"
+BACKUP_MEDIA="/mnt/$ROOT_NAME"
+
+# DEPRECATING!!!
 DEST_SNAP="$DEST/snapshots"
+# /DEPRECATIG
+
+SNAP_CONTAINER="snapshots"
 
 # SSH target settings
 DEST_SSH_SNAP="/mnt/aea3/snapshots"
