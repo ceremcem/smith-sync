@@ -15,4 +15,6 @@ fits **only my own use case**, which will provide enough API functions in order 
 
 # Disclaimer
 
-Although I use these tools in my everyday backup tasks, this library and tools are in a very early stage and you **SHOULD** take appropriate actions (eg. multiple offline backups) in order not to loose/destroy your backups and even your operating system. 
+Although I use these tools in my everyday backup tasks, this library and tools are in a very early stage and you **SHOULD** take appropriate actions (eg. multiple offline backups) in order not to loose/destroy your backups and even your operating system.
+
+# Functions
