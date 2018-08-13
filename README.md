@@ -1,5 +1,8 @@
 # Smith Sync
 
+> TL;DR; <br />
+> Contains general purpose tools which are built with aktos-bash-lib
+
 Backup systems requires many actions, starting from attaching physical disk(s),
 decrypting and/or mounting partitions, sending changes, generating logs, cleanup,
 etc...
