@@ -1,0 +1,51 @@
+#!/bin/bash
+set -eu -o pipefail
+set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
+safe_source () { source $1; set_dir; }
+# end of bash boilerplate
+
+# TODO: Add Algorithm
+
+safe_source $_dir/lib/all.sh
+
+s=$1
+d=$2
+
+[[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
+
+echo "from $s to $d"
+
+# source and destination should be on different disks
+require_different_disks $s $d
+
+#echo "listing subvols below $s"
+#list_subvol_below $s
+
+src_mnt=$(mount_point_of $s)
+dst_mnt=$(mount_point_of $d)
+
+for _snap_root in $(get_snapshot_roots $s); do
+    snap_root=${_snap_root#$src_mnt/}
+    echo
+    echo "Syncing $snap_root"
+    echo "------------------------------"
+
+    # echo "--- the subvolumes to be synced: ---"
+    snapshots=( $(list_subvol_below $src_mnt/$snap_root) )
+
+    echo "--- already sent: ---"
+    find_sent_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"
+
+    echo "--- missing: ---"
+    for missing in `find_missing_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"`; do
+        parent=$(find_prev_snap $missing "${snapshots[@]}")
+        if [[ -z $parent ]]; then
+            echo_red "No parent found, won't send whole snapshot"
+            continue
+        fi
+        mkdir -p $dst_mnt/$snap_root
+        echo btrfs send -p $parent $missing | pv | btrfs receive $dst_mnt/$snap_root/
+    done
+done
+
+echo_green "done."
