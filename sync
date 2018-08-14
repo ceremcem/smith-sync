@@ -35,14 +35,19 @@ for _snap_root in $(get_snapshot_roots $s); do
     # echo "--- the subvolumes to be synced: ---"
     snapshots=( $(list_subvol_below $src_mnt/$snap_root) )
 
+    # create target directory structure
+    mkdir -p "$dst_mnt/$snap_root"
+
     echo "--- already sent: ---"
     find_sent_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"
 
-    echo "--- incomplete ---"
-    for incomplete in `list_subvol_below $dst_mnt/$snap_root/partial`; do
-        echo_yellow "Found incomplete snapshot: $incomplete"
-        if [[ $dry_run = false ]]; then
-            btrfs sub del $incomplete
+    echo "--- incomplete transfers ---"
+    for incomplete in `list_subvol_below $dst_mnt/$snap_root true`; do
+        if is_subvolume_incomplete $incomplete; then
+            echo_yellow "Found incomplete snapshot: $incomplete"
+            if [[ $dry_run = false ]]; then
+                btrfs sub del $incomplete
+            fi
         fi
     done
 
@@ -59,10 +64,8 @@ for _snap_root in $(get_snapshot_roots $s); do
             else
                 _parent_arg="-p $parent"
             fi
-            mkdir -p $dst_mnt/$snap_root/partial
-
-            btrfs send $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/partial
-            [[ $? -eq 0 ]] && mv $dst_mnt/$snap_root/partial/$(basename $missing) $dst_mnt/$snap_root
+            btrfs send $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/
+            echo_green "...$missing succesfully sent."
         fi
     done
 done
