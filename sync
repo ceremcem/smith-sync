@@ -1,7 +1,6 @@
 #!/bin/bash
 set -eu -o pipefail
-set_dir(){ _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; }; set_dir
-safe_source () { source $1; set_dir; }
+safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
 # end of bash boilerplate
 
 # TODO: Add Algorithm
