@@ -29,7 +29,7 @@ dst_mnt=$(mount_point_of $d)
 for _snap_root in $(get_snapshot_roots $s); do
     snap_root=${_snap_root#$src_mnt/}
     echo
-    echo "Syncing $snap_root"
+    echo_blue "Syncing $snap_root -> $dst_mnt/..."
     echo "------------------------------"
 
     # echo "--- the subvolumes to be synced: ---"
@@ -47,6 +47,8 @@ for _snap_root in $(get_snapshot_roots $s); do
             echo_yellow "Found incomplete snapshot: $incomplete"
             if [[ $dry_run = false ]]; then
                 btrfs sub del $incomplete
+            else
+                echo "(This is dry run, won't delete anything actually)"
             fi
         fi
     done
@@ -54,20 +56,22 @@ for _snap_root in $(get_snapshot_roots $s); do
     echo "--- missing: ---"
     for missing in `find_missing_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"`; do
         parent=$(find_prev_snap $missing "${snapshots[@]}")
-        if [[ $dry_run = true ]]; then
-            [[ -z $parent ]] && msg="whole snap" || msg="@$(basename $parent)"
-            echo "will send $missing ($msg) -> $dst_mnt/$snap_root"
+        if [[ -z $parent ]]; then
+            echo_yellow "No parent found for $missing, sending whole snapshot"
+            _parent_arg=
         else
-            if [[ -z $parent ]]; then
-                echo_yellow "No parent found for $missing, sending whole snapshot"
-                _parent_arg=
-            else
-                _parent_arg="-p $parent"
-            fi
+            echo_blue "Sending $(basename $missing) (based on $(basename $parent)) "
+            _parent_arg="-p $parent"
+        fi
+
+        if [[ $dry_run = true ]]; then
+            echo "(This is dry run, won't send anything actually.)"
+        else
             btrfs send -q $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/
             echo_green "...$missing succesfully sent."
         fi
     done
+    echo "--- end of $snap_root ---"
 done
 
 echo_green "done."
