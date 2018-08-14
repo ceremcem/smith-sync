@@ -64,7 +64,7 @@ for _snap_root in $(get_snapshot_roots $s); do
             else
                 _parent_arg="-p $parent"
             fi
-            btrfs send $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/
+            btrfs send -q $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/
             echo_green "...$missing succesfully sent."
         fi
     done
