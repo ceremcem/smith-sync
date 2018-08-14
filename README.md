@@ -1,21 +1,22 @@
 # Smith Sync
 
-> TL;DR; <br />
-> Contains general purpose tools which are built with [aktos-bash-lib](https://github.com/aktos-io/aktos-bash-lib)
+### Description 
+
+This project contains general purpose BTRFS sync tools which are built with [aktos-bash-lib](https://github.com/aktos-io/aktos-bash-lib). Scripts are intended to be 
+* small 
+* readable 
+* extendable 
 
 
 ### Rationale
 
-Backup systems requires many actions, starting from attaching physical disk(s),
-decrypting and/or mounting partitions, sending changes, generating logs, cleanup,
-etc...
+Backup operations involve many actions, such as attaching physical disk(s),
+decrypting and/or mounting partitions, sending changes, generating logs, generating restoration scripts, cleaning up,
+etc... That's why every backup procedure will eventually vary greatly.
 
-There are lots of tools (especially the ones that are specialized for BTRFS filesystems) which are
-designed for a very specific use case, probably that fits the toolset author's case. Any system admin may require different ways to make backups, where they would likely
-end up writing their own wrapper scripts around these tools to make their tasks done.
+This leads the system admins to write their own script around the general purpose tool. Problem is that the surrounding script would be highly complex and hard to maintain.
 
-This library is intended to provide API first and then some specific tools.
-
+This project is filling the gap by providing high level Bash functions for backup tasks (BTRFS in mind, but will fit for any scenario) in order to keep "surrounding scripts" very simple, easily costumizable, efficiently maintainable.
 
 # Disclaimer
 
@@ -25,7 +26,7 @@ Although I use these tools in my everyday backup tasks, this library and tools a
 
 ### `sync`
 
-Shell scrip to sychronize target and destination in the same hierarchy.
+Shell scrip to sychronize source and destination in the same hierarchy.
 
 ```console
 $ ./sync /path/to/source/snapshots /path/to/dest/snapshots
@@ -47,8 +48,8 @@ $ ./sync /path/to/source/snapshots /path/to/dest/snapshots
     git submodule update --recursive
     ```
 
-3. Use tools with relative paths
-4. Use functions available in `smith-sync/lib/all.sh`
+3. Use `smith-sync` tools with relative paths
+4. Use functions available in `smith-sync/lib`
 
 # Example Toolset
 
