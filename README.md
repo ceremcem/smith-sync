@@ -52,4 +52,4 @@ $ ./sync /path/to/source/snapshots /path/to/dest/snapshots
 
 # Example Toolset
 
-TODO: Add erik toolset as an example 
+See [erik-sync](https://github.com/ceremcem/erik-sync) for an example usage. 
