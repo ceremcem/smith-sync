@@ -14,13 +14,13 @@ Backup operations involve many actions, such as attaching physical disk(s),
 decrypting and/or mounting partitions, sending changes, generating logs, generating restoration scripts, cleaning up,
 etc... That's why every backup procedure will eventually vary greatly.
 
-This leads the system admins to write their own script around the general purpose tool. Problem is that the surrounding script would be highly complex and hard to maintain.
+This leads the system admins to write their own scripts around the general purpose tool they choose. Problem is that the surrounding script would be highly complex and hard to maintain.
 
-This project is filling the gap by providing high level Bash functions for backup tasks (BTRFS in mind, but will fit for any scenario) in order to keep "surrounding scripts" very simple, easily costumizable, efficiently maintainable.
+This project is filling the gap by providing high level Bash functions for backup tasks (BTRFS in mind, but will fit for any scenario) in order to keep "surrounding scripts" very simple, easily costumizable, maintainable.
 
 # Disclaimer
 
-Although I use these tools in my everyday backup tasks, this library and tools are in a very early stage and you **SHOULD** take appropriate actions (eg. multiple offline backups) in order not to loose/destroy your backups and even your operating system.
+Although I use these tools in my everyday backup tasks, you **MUST** take appropriate actions (eg. multiple offline backups) in order not to loose/destroy your backups and even your operating system. In other words, use at your own risk.
 
 # Available Tools
 
@@ -48,8 +48,9 @@ $ ./sync /path/to/source/snapshots /path/to/dest/snapshots
     git submodule update --recursive
     ```
 
-3. Use `smith-sync` tools with relative paths
-4. Use functions available in `smith-sync/lib`
+3. Create a script for each task (attach, detach, sync, take-snapshot, ...)
+    1. Use `smith-sync` tools with relative paths
+    2. Use functions available in `smith-sync/lib`
 
 # Example Toolset
 
