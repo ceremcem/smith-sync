@@ -26,7 +26,7 @@ Although I use these tools in my everyday backup tasks, you **MUST** take approp
 
 ## `sync`
 
-Shell scrip to sychronize source and destination in the same hierarchy.
+Shell scrip to synchronize source and destination with the same hierarchy.
 
 ```console
 ./sync /path/to/source/snapshots /path/to/dest/snapshots
