@@ -4,35 +4,31 @@ safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_S
 # end of bash boilerplate
 
 # TODO: Add Algorithm
-
 safe_source $_dir/lib/all.sh
 
 s=$1
 d=$2
-dry_run=false
+dry_run=true
 
 [[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
 
+echo
+echo "==============================================="
 echo "from $s to $d"
 echo "==============================================="
 echo
 # source and destination should be on different disks
 require_different_disks $s $d
 
-#echo "listing subvols below $s"
-#list_subvol_below $s
-
 src_mnt=$(mount_point_of $s)
 dst_mnt=$(mount_point_of $d)
 
 for _snap_root in $(get_snapshot_roots $s); do
     snap_root=${_snap_root#$src_mnt/}
-    echo
     echo_blue "Syncing $snap_root -> $dst_mnt/..."
-    echo "------------------------------"
 
     # echo "--- the subvolumes to be synced: ---"
-    snapshots=( $(list_subvol_below $src_mnt/$snap_root) )
+    snapshots=$(list_subvol_below $src_mnt/$snap_root)
 
     # create target directory structure
     mkdir -p "$dst_mnt/$snap_root"
@@ -54,7 +50,7 @@ for _snap_root in $(get_snapshot_roots $s); do
 
     echo "--- missing: ---"
     for missing in `find_missing_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"`; do
-        parent=$(find_prev_snap $missing "${snapshots[@]}")
+        parent=$(find_prev_snap $missing $snapshots)
         if [[ -z $parent ]]; then
             echo_yellow "No parent found for $missing, sending whole snapshot"
             _parent_arg=
