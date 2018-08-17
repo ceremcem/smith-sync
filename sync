@@ -8,7 +8,7 @@ safe_source $_dir/lib/all.sh
 
 s=$1
 d=$2
-dry_run=false
+dry_run=${3:-false}
 
 [[ $(whoami) = "root" ]] || { sudo $0 $*; exit 0; }
 
