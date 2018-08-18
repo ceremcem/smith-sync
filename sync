@@ -66,6 +66,14 @@ echo "from $s to $d "
 echo "==============================================="
 echo
 
+# Fixme: Following command takes too long
+#start=$SECONDS
+#for i in 1; do
+#    echo "pass $i"
+#    find_sent_subs $s $d > x2
+#done
+#echo "took: $(( $SECONDS - $start ))"
+
 # source and destination should be on different disks
 require_different_disks $s $d
 
