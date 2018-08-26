@@ -25,31 +25,40 @@ HELP
     exit
 }
 
-# default options
-dry_run=false
+# for debugging
+#set -x
 
-POSITIONAL=()
+# Parse command line arguments
+# ---------------------------
+# Initialize parameters
+dry_run=false
+# ---------------------------
+args=("$@")
 _count=1
 while :; do
-    POSITIONAL+=("${1:-}") # save for "sudo $0" usage
     key="${1:-}"
     case $key in
         -h|-\?|--help|'')
             show_help    # Display a usage synopsis.
             exit
             ;;
-        --dry-run)       # Takes an option argument; ensure it has been specified.
-            shift
+        # --------------------------------------------------------
+        --dry-run) shift
             dry_run=true
             ;;
-        *)  # save the positional arguments
-            declare _arg$((_count++))="$1"
-            shift
+        # --------------------------------------------------------
+        --*)
+            echo
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+        *)  # generate the positional arguments: $_arg1, $_arg2, ...
+            [[ ! -z ${1:-} ]] && declare _arg$((_count++))="$1" && shift
     esac
     [[ -z ${1:-} ]] && break
-done
-set -- "${POSITIONAL[@]}"
-# use $_arg1 in place of $1, $_arg2 in place of $2 and so on
+done; set -- "${args[@]}"
+# use $_arg1 in place of $1, $_arg2 in place of $2 and so on, "$@" is intact
 
 s=${_arg1:-}
 d=${_arg2:-}
