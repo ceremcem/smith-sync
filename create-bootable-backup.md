@@ -10,8 +10,9 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 1. Format a new disk and create appropriate disk layout (use formatter script, target name is `zeytin` in this example)
 2. Sync rootfs 
 3. Sync /boot
-4. Install GRUB to target disk
+4. Install GRUB to target disk:
 
+       mount /dev/sdX1 /mnt/target-boot
        sudo grub-install --boot-directory=/mnt/target-boot/grub /dev/sdX    
 
 5. Change the configuration in `boot/grub/grub.cfg`: 
