@@ -14,6 +14,6 @@ new_initrd="$_sdir/$(cat $unpack_meta).new"
 
 echo "Packing $unpack_folder as $new_initrd"
 cd $unpack_folder
-find . 2>/dev/null | cpio --quiet -c -o | gzip -9 > "$new_initrd"
-cd $_sdir
+find . 2>/dev/null | cpio --quiet --dereference -o -H newc | gzip -9 > "$new_initrd"
 
+cd $_sdir
