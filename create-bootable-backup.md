@@ -16,7 +16,7 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 
 4. Install GRUB to target disk:
 
-       sudo grub-install --boot-directory=/mnt/target-boot/grub /dev/sdX    
+       sudo grub-install --boot-directory=/mnt/target-boot /dev/sdX    
 
 5. Change the configuration in `boot/grub/grub.cfg`: 
     1. Change root partition UUID's and LVM names in "linux..." line accordingly
