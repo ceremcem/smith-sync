@@ -5,8 +5,8 @@ safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_S
 
 safe_source $_sdir/lib/all.sh
 
+[[ -f ${1:-} ]] || die "First argument should be initrd file"
 initrd_file=$(readlink -f ${1:-})
-[[ -f $initrd_file ]] || die "First argument should be initrd file"
 
 [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
 
