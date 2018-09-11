@@ -72,6 +72,11 @@ d=${_arg2:-}
 [[ $dry_run = true ]] && dry_run_str="(dry run)"
 echo "=====================${dry_run_str:-}=========================="
 echo "from $s to $d "
+echo
+echo "Following snapshot roots will be synced:"
+for _snap_root in $(get_snapshot_roots $s); do
+    echo "* $_snap_root"
+done
 echo "==============================================="
 echo
 
