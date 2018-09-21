@@ -41,7 +41,7 @@ If everything above goes well and **you have booted up with your new disk**, con
 
 Above procedure is sufficient for booting up from a newly formatted LUKS partition. But when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures agains `/boot/grub/grub.cfg` overwrites: 
 
-### Prepare a last resort
+### Prepare the failsafe backup
 
 1. `cp /boot/grub/grub.cfg /boot/grub/grub.cfg.failsafe`
 2. If anything goes wrong, load failsafe config file in the grub shell manually:
