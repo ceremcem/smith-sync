@@ -32,7 +32,8 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 
 6. Change `etc/fstab` entries accordingly
 7. Change `etc/crypttab` entries accordingly
-8. *Optional*: If this will be a diverged clone, [give-new-id](https://github.com/aktos-io/dcs-tools/blob/master/give-new-id).
+8. Update `/etc/initramfs-tools/conf.d/resume` according to `grep swap /etc/fstab` output
+9. *Optional*: If this will be a diverged clone, [give-new-id](https://github.com/aktos-io/dcs-tools/blob/master/give-new-id).
 
 # Important 
 
