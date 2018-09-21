@@ -58,3 +58,7 @@ Even though the available tools are standalone, it's highly encouraged to build 
 # Example Toolset
 
 See [erik-sync](https://github.com/ceremcem/erik-sync) for an example usage. `erik-sync` is my current, everyday backup toolset. 
+
+# Helper HOWTOs
+
+(See [doc](./doc))
