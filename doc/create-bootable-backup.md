@@ -64,4 +64,6 @@ Above procedure is sufficient for booting up from a newly formatted LUKS partiti
        
 5. Optionally check the difference between newly created `grub.cfg` and `grub.cfg.failsafe`
 
+       diff -u --color /boot/grub/grub.cfg.failsafe /boot/grub/grub.cfg
+
 6. Reboot
