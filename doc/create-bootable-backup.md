@@ -39,7 +39,7 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 
 If everything above goes well and **you have booted up with your new disk**, continue reading.
 
-Above procedure is sufficient for booting up from a newly formatted LUKS partition. But when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures agains `/boot/grub/grub.cfg` overwrites: 
+Above procedure is sufficient for booting up from a newly formatted LUKS partition. However, when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures against `/boot/grub/grub.cfg` overwrites: 
 
 ### Prepare the failsafe backup
 
