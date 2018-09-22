@@ -51,7 +51,7 @@ Above procedure is sufficient for booting up from a newly formatted LUKS partiti
 
 ### Add appropriate boot options 
 
-1. Declare your above extra arguments (`cat /proc/cmdline`) in `/etc/default/grub` file: 
+1. Declare your above extra arguments (`cat /proc/cmdline | tr ' ' '\n'`) in `/etc/default/grub` file: 
 
        GRUB_CMDLINE_LINUX="\
                resume=/dev/mapper/zeytin-swap \
