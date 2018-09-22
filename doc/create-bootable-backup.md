@@ -41,29 +41,27 @@ If everything above goes well and **you have booted up with your new disk**, con
 
 Above procedure is sufficient for booting up from a newly formatted LUKS partition. However, when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures against `/boot/grub/grub.cfg` overwrites: 
 
-### Prepare the failsafe backup
+### Add appropriate boot options 
 
-1. `cp /boot/grub/grub.cfg /boot/grub/grub.cfg.failsafe`
-2. If anything goes wrong, load failsafe config file in the grub shell manually:
+1. Prepare the failsafe backup:
+
+       cp /boot/grub/grub.cfg /boot/grub/grub.cfg.failsafe
+       
+2. If anything goes wrong, be prepared to load failsafe config file inside the grub shell manually:
 
        grub> configfile (hd0,msdos1)/boot/grub/grub.cfg.failsafe
 
-
-### Add appropriate boot options 
-
-1. Declare your above extra arguments (`cat /proc/cmdline | tr ' ' '\n'`) in `/etc/default/grub` file: 
+3. Declare your above extra arguments (`cat /proc/cmdline | tr ' ' '\n'`) in `/etc/default/grub` file: 
 
        GRUB_CMDLINE_LINUX="\
                resume=/dev/mapper/zeytin-swap \
                rootflags=subvol=rootfs \
                cryptopts=source=UUID=ef966229-c382-4c8a-97bf-e413e8826d9e,target=zeytin_crypt,lvm=zeytin-root"
                
-2. Update Grub
+4. Update Grub
 
-       sudo update-grub 
+       [[ -f /boot/grub/grub.cfg.failsafe ]] || echo "Check your failsafe!" && sudo update-grub
        
-3. Optionally check the difference between newly created `grub.cfg` and `grub.cfg.failsafe`
+5. Optionally check the difference between newly created `grub.cfg` and `grub.cfg.failsafe`
 
-4. Reboot
-
-5. See you can still succesfully boot up. 
+6. Reboot
