@@ -1,6 +1,8 @@
 # Status 
 
-WIP
+WIP: 
+
+1. https://unix.stackexchange.com/questions/471247/how-to-add-ssmtp-into-initramfs
 
 # Adding binaries to initramfs
 
