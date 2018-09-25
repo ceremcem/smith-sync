@@ -3,6 +3,7 @@
 WIP: 
 
 1. https://unix.stackexchange.com/questions/471247/how-to-add-ssmtp-into-initramfs
+2. http://jurjenbokma.com/ApprenticesNotes/getting_statlinked_binaries_on_debian.xhtml
 
 # Adding binaries to initramfs
 
