@@ -12,15 +12,15 @@ Scripts in `/usr/share/initramfs-tools/hooks` are executed on `update-initramfs`
 
 ### Adding files:
 
-1. Get/locate the binary:
+1. Get the binary:
 
-  1. Either install/compile a statically linked binary.
-  2. Or add dynamically linked binaries with dependencies: `ldd /path/to/binary`
-    
-          mkdir tmp && cd tmp 
-          cp `which ssmtp` . 
-          `which ssmtp` | grep '=>' | awk '{print $3}' | xargs -i cp {} .
-          `which ssmtp` | grep -v '=>' | awk '{print $1}' | # <-------------- how to get them?
+    1. Either install/compile a statically linked binary.
+    2. Or add dynamically linked binaries with dependencies: `ldd /path/to/binary`
+
+            mkdir tmp && cd tmp 
+            cp `which ssmtp` . 
+            `which ssmtp` | grep '=>' | awk '{print $3}' | xargs -i cp {} .
+            `which ssmtp` | grep -v '=>' | awk '{print $1}' | # <-------------- how to get them?
   
 2. Add hook script. 
 3. Update initramfs.
