@@ -1,0 +1,36 @@
+#!/bin/bash
+set -u -o pipefail
+safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
+# end of bash boilerplate
+
+[[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
+
+elist="$_sdir/exclude-list.txt"
+
+target=$1
+
+known_remove(){
+rsync -n -aHAXvPh --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" $target $target \
+	| grep deleting \
+	| awk '{print $2}' \
+	| while read -r f; do
+		file="$target/$f"
+		echo "removing $file"
+		rm -rf "$file"
+	done
+}
+shopt -s globstar
+
+fast_remove(){
+cat $elist | sed 's/#.*$//g' | while read -r f; do
+	[[ -z $f ]] && continue
+	r="$target/**/$f"
+	echo "will remove $r"
+        rm -rf "$r"
+done
+}
+
+
+
+known_remove
+#fast_remove
