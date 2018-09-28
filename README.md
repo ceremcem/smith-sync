@@ -2,10 +2,11 @@
 
 ## Description 
 
-This project contains general purpose BTRFS sync tools which are built with [aktos-bash-lib](https://github.com/aktos-io/aktos-bash-lib). Scripts are intended to be 
+This project contains general purpose tools for backup purposes which are built with [aktos-bash-lib](https://github.com/aktos-io/aktos-bash-lib). Scripts are intended to be 
 * small 
 * readable 
 * extendable 
+* portable
 
 
 ### Rationale
@@ -24,12 +25,12 @@ Although I use these tools in my everyday backup tasks, you **MUST** take approp
 
 # Available Tools
 
-## `sync`
+## `btrfs-sync`
 
 Shell scrip to synchronize source and destination with the same hierarchy.
 
 ```console
-./sync /path/to/source/snapshots /path/to/dest/snapshots
+./btrfs-sync /path/to/source/snapshots /path/to/dest/snapshots
 ```
 
 # Intended Usage
@@ -57,3 +58,7 @@ Even though the available tools are standalone, it's highly encouraged to build 
 # Example Toolset
 
 See [erik-sync](https://github.com/ceremcem/erik-sync) for an example usage. `erik-sync` is my current, everyday backup toolset. 
+
+# Helper HOWTOs
+
+(See [doc](./doc))
