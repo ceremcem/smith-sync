@@ -68,6 +68,7 @@ d=${_arg2:-}
 
 
 [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
+start_timer
 
 [[ $dry_run = true ]] && dry_run_str="(dry run)"
 echo "=====================${dry_run_str:-}=========================="
@@ -102,7 +103,10 @@ for _snap_root in $(get_snapshot_roots $s); do
     mkdir -p "$dst_mnt/$snap_root"
 
     echo "--- already sent: ---"
-    find_sent_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"
+    already_sent=$(find_sent_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root")
+    echo "$already_sent"
+    last_sent=$(echo $already_sent | rev | cut -d " " -f 1 | rev)
+    #echo "LAST SENT: $last_sent"
 
     echo "--- incomplete transfers ---"
     for incomplete in `list_subvol_below $dst_mnt/$snap_root true`; do
@@ -119,6 +123,12 @@ for _snap_root in $(get_snapshot_roots $s); do
     echo "--- missing: ---"
     snapshots=$(list_subvol_below $src_mnt/$snap_root)
     for missing in `find_missing_subs "$src_mnt/$snap_root" "$dst_mnt/$snap_root"`; do
+        if [[ ! -z $last_sent ]]; then
+            if [ $missing \< $last_sent ]; then
+                echo_yellow "Skipping older snapshot: $(basename $missing)"
+                continue
+            fi
+        fi 
         parent=$(find_prev_snap $missing $snapshots)
         if [[ -z $parent ]]; then
             echo_yellow "No parent found for $missing, sending whole snapshot"
@@ -138,4 +148,4 @@ for _snap_root in $(get_snapshot_roots $s); do
     echo "end of syncing $snap_root"
 done
 
-echo_green "done."
+show_timer "Completed in: "
