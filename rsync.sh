@@ -5,6 +5,9 @@ safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_S
 
 safe_source $_sdir/lib/all.sh
 
+# do not exit on errors
+set +e
+
 # show help
 show_help(){
     cat <<HELP
@@ -26,25 +29,13 @@ die () {
     exit 255
 }
 
-# Cleanup code
-sure_exit(){
-    echo
-    echo_yellow "Interrupted by user."
-    exit
-}
-cleanup(){
-    echo "Have a nice day."
-    exit
-}
-trap sure_exit SIGINT # Runs on Ctrl+C, before EXIT
-trap cleanup EXIT
-
 
 # Parse command line arguments
 # ---------------------------
 # Initialize parameters
 dry_run=false
 unattended=false
+iredir=false # internal redirect
 # ---------------------------
 args=("$@")
 _count=1
@@ -62,6 +53,10 @@ while :; do
         -u) shift
             unattended=true
             ;;
+        --internal-redirect) shift
+            iredir=true
+            ;;
+
         # --------------------------------------------------------
         -*) # Handle unrecognized options
             echo
@@ -86,7 +81,7 @@ if [[ ! -d $dest ]]; then
     die "sync directory must exist: $dest"
 fi
 
-echo_green "Using destination directory: $dest"
+[[ $iredir = false ]] && echo_green "Using destination directory: $dest"
 
 if [[ $unattended = false ]]; then
     if ! prompt_yes_no "Should we really continue?"; then
@@ -96,7 +91,27 @@ if [[ $unattended = false ]]; then
 fi
 
 # All checks are done, run as root
-[[ $(whoami) = "root" ]] || { sudo $0 "$@" -u; exit 0; }
+[[ $(whoami) = "root" ]] || { sudo $0 "$@" -u --internal-redirect; exit 0; }
+
+# Cleanup code (should be after "run as root")
+sure_exit(){
+    echo
+    echo_yellow "Interrupted by user."
+    exit
+}
+cleanup(){
+    exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        echo_green "Have a nice day."
+    else
+        echo_red "Something went wrong: Code: $exit_code"
+    fi
+    exit
+}
+trap sure_exit SIGINT # Runs on Ctrl+C, before EXIT
+trap cleanup EXIT
+
+
 
 RSYNC="nice -n19 ionice -c3 rsync"
 SSH="ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o AddressFamily=inet"
@@ -108,6 +123,20 @@ start_timer
 _param=
 [[ $dry_run = true ]] && _param="$_param --dry-run"
 
-$RSYNC -aHAXvPh ${_param} --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
+for i in `seq 1 10`; do
+    $RSYNC -aHAXvPh ${_param} --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
+    exit_code=$?
+    if [ $exit_code -eq 11 ]; then
+        echo_red "NO Space Left on the device (code $exit_code)"
+        retry="3s"
+        echo_yellow "...will retry in $retry"
+        sleep ${retry}
+        echo_green "...Retrying..."
+        continue
+    fi
+    break
+done
 
 show_timer "sync completed in:"
+
+exit $exit_code
