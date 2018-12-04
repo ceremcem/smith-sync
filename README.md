@@ -13,11 +13,11 @@ This project contains general purpose tools for backup purposes which are built 
 
 Backup operations involve many actions, such as attaching physical disk(s),
 decrypting and/or mounting partitions, sending changes, generating logs, generating restoration scripts, cleaning up,
-etc... That's why every backup procedure will be diverged eventually.
+etc... That's why full backup operations are not simple and every backup procedure will be diverged eventually.
 
-This leads the system admins to write their own scripts around the general purpose tool they choose. Problem is that the surrounding script would be highly complex and hard to maintain.
+This leads the system admins to write their own scripts around the general purpose tool they choose. Problem arises here: the surrounding script would be highly complex and hard to maintain.
 
-This project is filling the gap by providing high level Bash functions for backup tasks (BTRFS in mind, but will fit for any scenario) in order to keep "surrounding scripts" very simple, easily costumizable, maintainable.
+This project is filling the gap by providing high level Bash functions for backup tasks (BTRFS in mind, but will fit for any scenario) in order to keep "surrounding scripts" very simple, easily customizable, maintainable.
 
 ## Disclaimer
 
@@ -31,6 +31,14 @@ Shell scrip to synchronize source and destination with the same hierarchy.
 
 ```console
 ./btrfs-sync /path/to/source/snapshots /path/to/dest/snapshots
+```
+
+## `rsync.sh`
+
+Same as `rsync` but uses a default [`exclude-list.txt`](./exclude-list.txt) which is optimized for rootfs backups. 
+
+```console
+./rsync.sh /path/to/source/ /path/to/dest/
 ```
 
 # Intended Usage
