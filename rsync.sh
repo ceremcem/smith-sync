@@ -123,12 +123,16 @@ start_timer
 _param=
 [[ $dry_run = true ]] && _param="$_param --dry-run"
 
-for i in `seq 1 10`; do
+for i in `seq 1 3`; do
     $RSYNC -aHAXvPh ${_param} --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
     exit_code=$?
     if [ $exit_code -eq 11 ]; then
         echo_red "NO Space Left on the device (code $exit_code)"
-        retry="3s"
+        # It's useful to retry on "No Space Left on the device" error on BTRFS because 
+        # user might have deleted some big snapshots recently and btrfs-cleanup might be still 
+        # working on freeing the available space. 
+        # TODO: Retry only if it's BTRFS filesystem.
+        retry="10m"
         echo_yellow "...will retry in $retry"
         sleep ${retry}
         echo_green "...Retrying..."

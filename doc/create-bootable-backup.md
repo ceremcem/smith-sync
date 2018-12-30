@@ -37,36 +37,40 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 7. Change `etc/crypttab` entries accordingly
 8. Update `/etc/initramfs-tools/conf.d/resume` according to `grep swap /etc/fstab` output
 9. *Optional*: If this will be a diverged clone, [give-new-id](https://github.com/aktos-io/dcs-tools/blob/master/give-new-id).
+10. Boot up with your new disk.
+11. Continue from below **Important** section.
 
 # Important 
 
-If everything above goes well and **you have booted up with your new disk**, continue reading.
+If everything above went well and **you have booted up with your new disk**, continue reading. If you haven't rebooted yet, do not continue, because some operations below rely on *current* kernel parameters.
 
-Above procedure is sufficient for booting up from a newly formatted LUKS partition. However, when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures against `/boot/grub/grub.cfg` overwrites: 
+Above procedure (till `#10`) is sufficient for booting up from a newly formatted LUKS partition. However, when you directly or indirectly invoke `update-grub` for some reason (system upgrades, changing initramfs static IP, etc.), you will be end up with **unbootable system**. It's highly recommended to take appropriate measures against `/boot/grub/grub.cfg` overwrites: 
 
-### Add appropriate boot options 
+### Make GRUB parameters persistent
 
-1. Prepare the failsafe backup:
+1. Backup your current `grub.cfg` just in case:
 
        cp /boot/grub/grub.cfg /boot/grub/grub.cfg.failsafe
        
-2. If anything goes wrong, be prepared to load failsafe config file inside the grub shell manually:
+2. Be prepared to load above backup config file inside the grub shell manually. Remember the following to use backup config:
 
        grub> configfile (hd0,msdos1)/boot/grub/grub.cfg.failsafe
 
-3. Declare your above extra arguments (`cat /proc/cmdline | tr ' ' '\n'`) in `/etc/default/grub` file: 
+3. Make above GRUB changes persistent: 
 
-       GRUB_CMDLINE_LINUX="\
-               resume=/dev/mapper/zeytin-swap \
-               rootflags=subvol=rootfs \
-               cryptopts=source=UUID=HELLO,target=zeytin_crypt,lvm=zeytin-root"
-               
-4. Update Grub
+    1. Edit `/etc/default/grub` file to add the required arguments (`cat /proc/cmdline | tr ' ' '\n'`): 
 
-       [[ -f /boot/grub/grub.cfg.failsafe ]] || echo "Check your failsafe!" && sudo update-grub
-       
-5. Optionally check the difference between newly created `grub.cfg` and `grub.cfg.failsafe` and verify your settings:
+           GRUB_CMDLINE_LINUX="\
+                   resume=/dev/mapper/zeytin-swap \
+                   rootflags=subvol=rootfs \
+                   cryptopts=source=UUID=HELLO,target=zeytin_crypt,lvm=zeytin-root"
 
-       git diff /boot/grub/grub.cfg.failsafe /boot/grub/grub.cfg
+    2. Update GRUB:
 
-6. Reboot
+           [[ -f /boot/grub/grub.cfg.failsafe ]] || echo "Check your failsafe!" && sudo update-grub
+
+    3. Optionally check the difference between newly created `grub.cfg` and `grub.cfg.failsafe` and verify your settings:
+
+           git diff /boot/grub/grub.cfg.failsafe /boot/grub/grub.cfg
+
+4. Reboot
