@@ -97,7 +97,7 @@ fi
 sure_exit(){
     echo
     echo_yellow "Interrupted by user."
-    exit
+    exit 5
 }
 cleanup(){
     exit_code=$?
@@ -106,7 +106,7 @@ cleanup(){
     else
         echo_red "Something went wrong: Code: $exit_code"
     fi
-    exit
+    exit $exit_code
 }
 trap sure_exit SIGINT # Runs on Ctrl+C, before EXIT
 trap cleanup EXIT
