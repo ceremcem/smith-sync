@@ -14,9 +14,14 @@ show_help(){
 
     $(basename $0) [options] /path/to/source /path/to/destination
     Options:
-        --dry-run       : Dry run, don't touch anything actually
-        -u              : Unattended run, don't show yes/no prompt
-        --ssh           : Switch to SSH mode (TODO)
+        --dry-run          : Dry run, don't touch anything actually
+        -u                 : Unattended run, don't show yes/no prompt
+        --ssh[="settings"] : Switch to SSH mode by using "settings"
+
+    Example:
+
+        rsync.sh --ssh user@myhost:/path/to/src/ /path/to/dest/
+        rsync.sh --ssh="-p 1234 -i /path/to/id" user@myhost:/path/to/src/ /path/to/dest/
 
 HELP
     exit
@@ -36,6 +41,8 @@ die () {
 dry_run=false
 unattended=false
 iredir=false # internal redirect
+ssh_mode=false
+ssh_settings=
 # ---------------------------
 args=("$@")
 _count=1
@@ -56,7 +63,10 @@ while :; do
         --internal-redirect) shift
             iredir=true
             ;;
-
+        --ssh*) shift
+            ssh_mode=true
+            ssh_settings="${key#*=}"  # use port/id file settings after "=" sign
+            ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
             echo
@@ -115,22 +125,22 @@ trap cleanup EXIT
 
 RSYNC="nice -n19 ionice -c3 rsync"
 SSH="ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o AddressFamily=inet"
-# SSH options:    --rsh="$SSH" --rsync-path="sudo rsync" target_$conn_method:$source $sync_dir
 
 start_timer
 
 # build rsync params
-_param=
-[[ $dry_run = true ]] && _param="$_param --dry-run"
+_params=
+[[ $dry_run = true ]] && _params="$_params --dry-run"
+[[ $ssh_mode = true ]] && _params="$_params --rsh=\"$SSH $ssh_settings\" --rsync-path=\"sudo rsync\""
 
 for i in `seq 1 3`; do
-    $RSYNC -aHAXvPh ${_param} --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
+    eval $RSYNC -aHAXvPh $_params --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
     exit_code=$?
     if [ $exit_code -eq 11 ]; then
         echo_red "NO Space Left on the device (code $exit_code)"
-        # It's useful to retry on "No Space Left on the device" error on BTRFS because 
-        # user might have deleted some big snapshots recently and btrfs-cleanup might be still 
-        # working on freeing the available space. 
+        # It's useful to retry on "No Space Left on the device" error on BTRFS because
+        # user might have deleted some big snapshots recently and btrfs-cleanup might be still
+        # working on freeing the available space.
         # TODO: Retry only if it's BTRFS filesystem.
         retry="10m"
         echo_yellow "...will retry in $retry"
