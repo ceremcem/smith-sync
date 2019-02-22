@@ -25,7 +25,11 @@
 - /proc/*
 - /sys/*
 - /tmp/*
-- /run/*
+
+# keep directory structure
++ /run/**/*/
+- /run/**/*
+
 - /mnt/*
 - /media/*
 - /lost+found
