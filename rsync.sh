@@ -134,7 +134,8 @@ _params=
 [[ $ssh_mode = true ]] && _params="$_params --rsh=\"$SSH $ssh_settings\" --rsync-path=\"sudo rsync\""
 
 for i in `seq 1 3`; do
-    eval $RSYNC -aHAXvPh $_params --delete --delete-excluded --exclude-from "$_sdir/exclude-list.txt" "$src" "$dest"
+    eval $RSYNC -aHAXvPh $_params --delete --delete-excluded \
+        --filter="\"merge $_sdir/exclude-list.txt\"" "$src" "$dest"
     exit_code=$?
     if [ $exit_code -eq 11 ]; then
         echo_red "NO Space Left on the device (code $exit_code)"

@@ -1,40 +1,42 @@
 # Exclude list for minimizing transfers for a bootable backup
-/home/*/.gvfs
-/home/*/.mozilla/firefox/*/Cache
-/home/*/.thumbnails
-/home/*/.local/share/gvfs-metadata
-/home/*/.Private                        # contains the actual encrypted home directory
-/home/*/.dbus                           # session-specific
-/home/*/.cache
-/home/**/Default/Cache
-/home/*/.Trash                          
-/home/**/.Trash-*
-/home/*/.local/share/Trash
-/home/*/.cddb                           # cached info about audio CDs
-/home/*/.aptitude                       # cached packages lists
-/var/run/*
-/var/lock/*
-/var/log/*
-/var/swap
-/var/cache
-/var/cache/apt/archives/*
-/lib/modules/*/volatile/.mounted
-/dev/*
-/proc/*
-/sys/*
-/tmp/*
-/run/*
-/mnt/*
-/media/*
-/lost+found
-/var/lib/lxcfs
-/var/lib/apt/lists
-**/.npm/_cacache
-/var/lib/mlocate/mlocate.db*
+- /home/*/.gvfs
+- /home/*/.mozilla/firefox/*/Cache
+- /home/*/.thumbnails
+- /home/*/.local/share/gvfs-metadata
+- /home/*/.Private                        # contains the actual encrypted home directory
+- /home/*/.dbus                           # session-specific
+- /home/*/.cache
+- /home/**/Default/Cache
+- /home/*/.Trash                          
+- /home/**/.Trash-*
+- /home/*/.local/share/Trash
+- /home/*/.cddb                           # cached info about audio CDs
+- /home/*/.aptitude                       # cached packages lists
++ /var/run/**/*/
+- /var/run/**/*
+- /var/lock/*
++ /var/log/*/                               # keep directory structure
+- /var/log/*
+- /var/swap
+- /var/cache
+- /var/cache/apt/archives/*
+- /lib/modules/*/volatile/.mounted
+- /dev/*
+- /proc/*
+- /sys/*
+- /tmp/*
+- /run/*
+- /mnt/*
+- /media/*
+- /lost+found
+- /var/lib/lxcfs
+- /var/lib/apt/lists
+- **/.npm/_cacache
+- /var/lib/mlocate/mlocate.db*
 
-/var/log.*
+- /var/log.*
 
 # cca specific
-/**/tmp
-*--no-sync
-/.*                                       # hidden files under root, eg. snapper snapshot dir
+- /**/tmp
+- *--no-sync
+- /.*                                       # hidden files under root, eg. snapper snapshot dir
