@@ -19,8 +19,8 @@ Scripts in `/usr/share/initramfs-tools/hooks` are executed on `update-initramfs`
 
             mkdir tmp && cd tmp 
             cp `which ssmtp` . 
-            `which ssmtp` | grep '=>' | awk '{print $3}' | xargs -i cp {} .
-            `which ssmtp` | grep -v '=>' | awk '{print $1}' | # <-------------- how to get them?
+            ldd `which ssmtp` | grep '=>' | awk '{print $3}' | xargs -i cp {} .
+            ldd `which ssmtp` | grep -v '=>' | awk '{print $1}' | # <-------- verify that you already added those with above step
   
 2. Add hook script. 
 3. Update initramfs.
