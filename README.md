@@ -41,6 +41,14 @@ Same as `rsync` but uses a default [`exclude-list.txt`](./exclude-list.txt) whic
 ./rsync.sh /path/to/source/ /path/to/dest/
 ```
 
+#### Setup
+
+You must be able to run `sudo rsync` on the remote host without providing a password. To do so edit your `/etc/sudoers` file and **add the line to the bottom**: 
+
+```
+your_user ALL=(ALL:ALL) NOPASSWD: /full/path/to/rsync
+```
+
 # Intended Usage
 
 Even though the available tools are standalone, it's highly encouraged to build your own toolset around smith-sync:
