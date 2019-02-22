@@ -15,8 +15,8 @@
 + /var/run/**/*/
 - /var/run/**/*
 - /var/lock/*
-+ /var/log/*/                               # keep directory structure
-- /var/log/*
++ /var/log/**/*/                               # keep directory structure
+- /var/log/**/*
 - /var/swap
 - /var/cache
 - /var/cache/apt/archives/*
