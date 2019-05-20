@@ -65,7 +65,8 @@ while :; do
             ;;
         --ssh*) shift
             ssh_mode=true
-            ssh_settings="${key#*=}"  # use port/id file settings after "=" sign
+            # use port/id file settings after "=" sign (or null)
+            ssh_settings=$(echo $key | sed -e  's/^[^=]*//' | cut -d "=" -f 2)
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -131,7 +132,11 @@ start_timer
 # build rsync params
 _params=
 [[ $dry_run = true ]] && _params="$_params --dry-run"
-[[ $ssh_mode = true ]] && _params="$_params --rsh=\"$SSH $ssh_settings\" --rsync-path=\"sudo rsync\""
+if [[ $ssh_mode = true ]]; then
+    ssh_config_path="$(eval echo ~$SUDO_USER)/.ssh/config"
+    ssh_id_path="$(eval echo ~$SUDO_USER)/.ssh/id_rsa"
+    _params="$_params --rsh=\"$SSH $ssh_settings -F $ssh_config_path\" --rsync-path=\"sudo rsync\""
+fi
 
 for i in `seq 1 3`; do
     eval $RSYNC -aHAXvPh $_params --delete --delete-excluded \
