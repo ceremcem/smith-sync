@@ -25,6 +25,9 @@
 - /proc/*
 - /sys/*
 - /tmp/*
+- /var/log/auth*.log
+- /var/log/daemon*.log
+
 
 # keep directory structure
 + /run/**/*/
