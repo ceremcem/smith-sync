@@ -88,10 +88,6 @@ dest=${_arg2:-}
 [[ -z $src ]] && die "Source can not be empty"
 [[ -z $dest ]] && die "Destination can not be empty"
 
-if [[ ! -d $dest ]]; then
-    die "sync directory must exist: $dest"
-fi
-
 [[ $iredir = false ]] && echo_green "Using destination directory: $dest"
 
 if [[ $unattended = false ]]; then
@@ -103,6 +99,14 @@ fi
 
 # All checks are done, run as root
 [[ $(whoami) = "root" ]] || { sudo $0 "$@" -u --internal-redirect; exit 0; }
+
+# Automatically enable "--ssh" mode if src or dest is an ssh string:
+for path in $src $dest; do
+    if [[ $path =~ ^[a-zA-Z0-9_@.%+-]+\:[a-zA-Z\/0-9.-]+.* ]]; then
+	echo_info "Automatically enabling SSH mode regarding to $path"
+	ssh_mode=true
+    fi
+done
 
 # Cleanup code (should be after "run as root")
 sure_exit(){
@@ -141,6 +145,7 @@ fi
 for i in `seq 1 3`; do
     eval $RSYNC -aHAXvPh $_params --delete --delete-excluded \
         --filter="\"merge $_sdir/exclude-list.txt\"" "$src" "$dest"
+    exit
     exit_code=$?
     if [ $exit_code -eq 11 ]; then
         echo_red "NO Space Left on the device (code $exit_code)"
