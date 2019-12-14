@@ -10,7 +10,7 @@ Given that, when you want to create a bootable backup disk, follow these steps:
 1. Format a new disk and create appropriate disk layout (use [a formatter script](https://github.com/ceremcem/erik-sync/blob/a3c9af2bab28409ae4a42bcacf13dbcf699d98fc/format-new-erik.sh), target name is `zeytin` in this example)
 2. Sync `/`
        
-       # use btrfs or rsync, according to your setup 
+      * Use `btrfs send | btrfs receive` or `rsync`, according to your setup 
        
 3. Sync `/boot`
 
