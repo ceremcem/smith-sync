@@ -6,20 +6,24 @@
     
 2. Install toolset:
 
-       apt-get install lxc tmux git 
+       apt-get install lxc tmux git
+       
+3. Configure `tmux`: 
+
+    1. https://stackoverflow.com/a/42201167/1952991
   
-3. Configure LXC
+4. Configure LXC
     1. Install [LXC-to-the-Future](https://github.com/aktos-io/lxc-to-the-future)
     2. Make [LXC port forwardings](https://github.com/aktos-io/lxc-to-the-future/blob/master/network-configuration.md#1-setup-nat-connection)
     3. Prepare a base container
     4. Restore (or make from scratch) the container settings in `/var/lib/lxc/*/config`
     5. Start the containers with a 30 second delay just in case.
     
-4. Install `watch-ip-change` to update public IP periodically.
+5. Install `watch-ip-change` to update public IP periodically.
 
-5. Monitor the disk health: https://github.com/ceremcem/monitor-btrfs-disk
+6. Monitor the disk health: https://github.com/ceremcem/monitor-btrfs-disk
 
-6. Prepare for switching between master and slave modes:
+7. Prepare for switching between master and slave modes:
 
     * In slave (backup) mode:
         1. CouchDB should run as normal. It will be in sync every time.
@@ -36,11 +40,11 @@
         1. Stop slave mode sync
         2. Update `example.com` IP
         
-7. Be prepared for disk failures:
+8. Be prepared for disk failures:
 
     1. TODO: Prepare a script to re-format, encrypt, set up RAID-1 and sync when a disk fails.
     
-8. Monitor for intrusions:
+9. Monitor for intrusions:
 
     1. Fail-to-ban
         
