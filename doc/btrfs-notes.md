@@ -1,8 +1,24 @@
 # BTRFS 
 ## Get profile info 
 
+To see how BTRFS partition is configured, use the following command:
+
 ```
 btrfs fi usage /mnt/foo
+```
+
+## Convert single setup to DUP 
+
+This is useful if you have only one physical disk and you still want data redundancy to some degree:
+
+```
+btrfs balance start -v -dconvert=dup,soft /path/to/mountpoint 
+```
+
+To check and fix data: 
+
+```
+btrfs scrub start -B /path/to/mountpoint
 ```
 
 ## Convert single setup to RAID1
@@ -18,23 +34,60 @@ btrfs device add /dev/mapper/bar-root /mnt/foo ##### <- warning at the moment th
 btrfs balance start -dconvert=raid1 -mconvert=raid1 /mnt/foo
 ```
 
-## Check corrupted files 
+## Find the corrupted files 
 
-Following command will read and write every file on the mountpoint (warning: it will take too long)
+Output is instantaneous after `btrfs scrub`, however paths are relative to their subvolumes, thus it's hard to identify which file belongs to which subvolume:
 
 ```
-sudo btrfs balance start /mnt/peynir/
+##sudo btrfs scrub start -B /path/to/mountpoint # -> you should already have done that
+sudo journalctl --output cat | grep 'BTRFS .* i/o error' | sort | uniq > corrupted-files.txt
+```
+
+> See https://unix.stackexchange.com/q/557213/65781 for updates of this problem
+
+Following command takes a long time but gives the exact paths:
+
+```
+sudo find / -type f -and -not -path /proc -exec cp -v {} /dev/null \; 2> corrupted-files.txt
+```
+
+To monitor the corrupted files log:
+
+```
+watch cat corrupted-files.txt
 ```
 
 # Hardware Related 
 
 ## Determine Disk Health 
 
+#### 1. Physical health: 
+
 ```
-sudo smartctl -x /dev/sdX
+sudo smartctl -t long -C /dev/sdX
+sudo badblocks -v /dev/sdX
 ```
 
-## Hotplug SATA 
+TODO: Document how to interpret the `smartctl` results. 
+
+##### 2. Data integrity check: 
+
+Do the following periodically (once a month to once a week):
+
+```
+btrfs scrub start -B /path/to/mountpoint
+```
+
+See https://github.com/ceremcem/monitor-btrfs-disk
+
+##### 3. "DRDY ERR" check:
+
+```
+sudo dmesg | grep "DRDY ERR"
+```
+
+
+## Hotplugging SATA Disk
 
 > TO BE TESTED
 
