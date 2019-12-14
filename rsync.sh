@@ -100,13 +100,20 @@ fi
 # All checks are done, run as root
 [[ $(whoami) = "root" ]] || { sudo $0 "$@" -u --internal-redirect; exit 0; }
 
-# Automatically enable "--ssh" mode if src or dest is an ssh string:
-for path in $src $dest; do
-    if [[ $path =~ ^[a-zA-Z0-9_@.%+-]+\:[a-zA-Z\/0-9.-]+.* ]]; then
-	echo_info "Automatically enabling SSH mode regarding to $path"
-	ssh_mode=true
-    fi
-done
+if [[ $ssh_mode = false ]]; then
+    for path in $src $dest; do
+        if [[ $path =~ ^[a-zA-Z0-9_@.%+-]+\:[0-9]{1,4}.* ]]; then
+	    echo_info "It seems that SSH mode is being used with a custom port."
+            die "Use --ssh=\"-p ...\" switch to declare the SSH port."
+        fi
+    done
+    for path in $src $dest; do
+        if [[ $path =~ ^[a-zA-Z0-9_@.%+-]+\:.* ]]; then
+	    echo_info "SSH mode seems to be intended"
+            die "Please add the --ssh switch."
+        fi
+    done
+fi
 
 # Cleanup code (should be after "run as root")
 sure_exit(){
