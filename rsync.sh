@@ -152,7 +152,7 @@ if [[ $ssh_mode = true ]]; then
 fi
 
 for i in `seq 1 3`; do
-    eval $RSYNC -aHAXvPh $_params --delete --delete-excluded \
+    eval $RSYNC -aHAXvPh $_params --delete --delete-excluded --numeric-ids \
         --filter="\"merge $_sdir/exclude-list.txt\"" "$src" "$dest"
     exit
     exit_code=$?
