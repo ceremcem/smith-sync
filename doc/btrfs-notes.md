@@ -97,7 +97,5 @@ sudo dmesg | grep "DRDY ERR"
 
 ## Hotplugging SATA Disk
 
-> TO BE TESTED
-
-https://unix.stackexchange.com/questions/368958/sata-hotplug-doesnt-work
+Enable "Hot Plug" option in BIOS for each SATA port. (https://unix.stackexchange.com/questions/368958/sata-hotplug-doesnt-work)
 
