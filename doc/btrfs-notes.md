@@ -15,7 +15,7 @@ This is useful if you have only one physical disk and you still want data redund
 btrfs balance start -v -dconvert=dup,soft /path/to/mountpoint 
 ```
 
-To check and fix data: 
+To check and **fix** data on a disk with DUP profile, simply run `btrfs scrub`: 
 
 ```
 btrfs scrub start -B /path/to/mountpoint
@@ -34,66 +34,9 @@ btrfs device add /dev/mapper/bar-root /mnt/foo ##### <- warning at the moment th
 btrfs balance start -dconvert=raid1 -mconvert=raid1 /mnt/foo
 ```
 
-## Find the corrupted files 
-
-Output is instantaneous after `btrfs scrub`, however paths are relative to their subvolumes, thus it's hard to identify which file belongs to which subvolume:
-
-```
-sudo btrfs scrub start -B /path/to/mountpoint # -> you should already have done that
-./get-corrupted-files.sh
-```
-
-`get-corrupted-files.sh`: 
-
-```sh
-#!/bin/bash
-
-sub_list=/tmp/subvolume-list-of-root.txt
-
-sudo btrfs sub list / > $sub_list
-
-while read a; do
-    root_id=$(echo $a | awk '{print $16}' | sed -r 's/,//')
-    rel_path=$(echo $a | sed -r 's/.*path:\s(.+)\)/\1/g')
-    subvol_path=$(cat $sub_list | awk '$2 == '"$root_id"' {print $9}')
-    [[ -z $subvol_path ]] && subvol_path="????"
-    echo "/$subvol_path/$rel_path"
-done < <( sudo journalctl --output cat | grep 'BTRFS .* i/o error' | sort | uniq )
-```
-
-
-
-> See also https://unix.stackexchange.com/q/557213/65781
-
-# Hardware Related 
-
-## Determine Disk Health 
-
-#### 1. Physical health: 
-
-```
-sudo smartctl -t long -C /dev/sdX
-sudo badblocks -v /dev/sdX
-```
-
-TODO: Document how to interpret the `smartctl` results. 
-
-##### 2. Data integrity check: 
-
-Do the following periodically (once a month to once a week):
-
-```
-btrfs scrub start -B /path/to/mountpoint
-```
+# Monitoring Disk Health 
 
 See https://github.com/ceremcem/monitor-btrfs-disk
-
-##### 3. "DRDY ERR" check:
-
-```
-sudo dmesg | grep "DRDY ERR"
-```
-
 
 ## Hotplugging SATA Disk
 
