@@ -39,23 +39,31 @@ btrfs balance start -dconvert=raid1 -mconvert=raid1 /mnt/foo
 Output is instantaneous after `btrfs scrub`, however paths are relative to their subvolumes, thus it's hard to identify which file belongs to which subvolume:
 
 ```
-##sudo btrfs scrub start -B /path/to/mountpoint # -> you should already have done that
-sudo journalctl --output cat | grep 'BTRFS .* i/o error' | sort | uniq > corrupted-files.txt
+sudo btrfs scrub start -B /path/to/mountpoint # -> you should already have done that
+./get-corrupted-files.sh
 ```
 
-> See https://unix.stackexchange.com/q/557213/65781 for updates of this problem
+`get-corrupted-files.sh`: 
 
-Following command takes a long time but gives the exact paths:
+```sh
+#!/bin/bash
 
-```
-sudo find / -type f -and -not -path /proc -exec cp -v {} /dev/null \; 2> corrupted-files.txt
+sub_list=/tmp/subvolume-list-of-root.txt
+
+sudo btrfs sub list / > $sub_list
+
+while read a; do
+    root_id=$(echo $a | awk '{print $16}' | sed -r 's/,//')
+    rel_path=$(echo $a | sed -r 's/.*path:\s(.+)\)/\1/g')
+    subvol_path=$(cat $sub_list | awk '$2 == '"$root_id"' {print $9}')
+    [[ -z $subvol_path ]] && subvol_path="????"
+    echo "/$subvol_path/$rel_path"
+done < <( sudo journalctl --output cat | grep 'BTRFS .* i/o error' | sort | uniq )
 ```
 
-To monitor the corrupted files log:
 
-```
-watch cat corrupted-files.txt
-```
+
+> See also https://unix.stackexchange.com/q/557213/65781
 
 # Hardware Related 
 
