@@ -145,8 +145,10 @@ _params=
 [[ $dry_run = true ]] && _params="$_params --dry-run"
 if [[ $ssh_mode = true ]]; then
     ssh_config_path="$(eval echo ~$SUDO_USER)/.ssh/config"
+    ssh_config_arg=
+    [[ -f ssh_config_path ]] && ssh_config_arg="-F $ssh_config_path"
     ssh_id_path="$(eval echo ~$SUDO_USER)/.ssh/id_rsa"
-    _params="$_params --rsh=\"$SSH $ssh_settings -F $ssh_config_path\" --rsync-path=\"sudo rsync\""
+    _params="$_params --rsh=\"$SSH $ssh_settings $ssh_config_arg\" --rsync-path=\"sudo rsync\""
 fi
 
 for i in `seq 1 3`; do
