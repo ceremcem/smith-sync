@@ -42,3 +42,11 @@ See https://github.com/ceremcem/monitor-btrfs-disk
 
 Enable "Hot Plug" option in BIOS for each SATA port. (https://unix.stackexchange.com/questions/368958/sata-hotplug-doesnt-work)
 
+# Restoring Files 
+
+```
+btrfs restore -s /dev/mapper/foo-root --path-regex ^(|/rootfs.bak(|/var(|/lib(|/couchdb(|/shards(|/60000000-7fffffff(|/.*)))))))$ /mnt/backup-disk/hello/
+```
+
+`-s`: Enable subvolumes
+`rootfs.bak`: The subvolume we want to search inside.
