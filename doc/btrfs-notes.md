@@ -49,4 +49,5 @@ btrfs restore -s /dev/mapper/foo-root --path-regex ^(|/rootfs.bak(|/var(|/lib(|/
 ```
 
 `-s`: Enable subvolumes
+
 `rootfs.bak`: The subvolume we want to search inside.
