@@ -25,13 +25,32 @@ btrfs scrub start -B /path/to/mountpoint
 
 > Based on https://btrfs.wiki.kernel.org/index.php/Using_Btrfs_with_Multiple_Devices#Conversion
 
-Assuming your root btrfs subvolume on your primary disk (`/dev/sda2`) is mounted on `/mnt/foo` and you want to add a btrfs partition (`/dev/mapper/bar-root`) as RAID1, which is on an LVM partition which is on a LUKS partition (`/dev/sdb2`):
+Assuming your root btrfs subvolume on your primary disk (`/dev/sda`) is mounted on `/` and you want to add a btrfs partition (`/dev/mapper/foo-root`) as RAID1, which is on an LVM (named: `foo`) partition on a LUKS partition (`/dev/sdb2`).
 
+> ## FINISH THIS HOWTO'S TESTS
+
+Setup to automount your LUKS partition first:
+
+```console
+# mkdir /etc/luks-keys
+# dd if=/dev/urandom of=/etc/luks-keys/sdb2.key bs=512 count=8
+# chmod 600 /etc/luks-keys/*
+# cryptsetup -v luksAddKey /dev/sdb2 /etc/luks-keys/sdb2.key 
+Enter any existing passphrase: 
+Key slot 0 unlocked.
+Key slot 1 created.
+Command successful.
+# blkid | awk '$1 == "/dev/sdb2:" {print $2}'
+# echo "foo_crypt UUID=the-above-uuid-of-sdb2 /etc/luks-keys/sdb2.key luks" >> /etc/crypttab
+# update-initramfs -u  # TODO: TEST THIS!!!
 ```
-cryptsetup open /dev/sdb2 bar
+
+Add the partition as RAID1:
+```
+cryptsetup open /dev/sdb2 foo_crypt
 lvscan 
-btrfs device add /dev/mapper/bar-root /mnt/foo ##### <- warning at the moment this will fail with READONLY filesystem
-btrfs balance start -dconvert=raid1 -mconvert=raid1 /mnt/foo
+btrfs device add /dev/mapper/foo-root / ##### <- warning at the moment this will fail with READONLY filesystem
+btrfs balance start -dconvert=raid1 -mconvert=raid1 /
 ```
 
 # Monitoring Disk Health 
