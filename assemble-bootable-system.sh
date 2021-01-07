@@ -85,7 +85,8 @@ done; set -- "${args_backup[@]}"
 
 [[ -z $config ]] && die "Config file is required."
 config=$(realpath $config)
-safe_source $config
+cd "$(dirname "$config")"
+source $config
 
 [[ -z $src ]] && die "Source of snapshots is required."
 [[ -d $root_mnt/$src ]] && src=$root_mnt/$src # relative path is used. 
