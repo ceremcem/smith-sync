@@ -1,0 +1,19 @@
+#!/bin/bash 
+
+# https://unix.stackexchange.com/questions/305590/btrfs-what-system-directories-should-have-copy-on-write-disabled
+# https://unix.stackexchange.com/a/395013/65781
+
+dirs=()
+
+# disable COW on Chromium profile folder
+dirs+=("$HOME/.config/chromium")
+
+#lsattr 
+
+for dir in "${dirs[@]}"; do
+    echo -n "Checking $dir"
+    [[ -d $dir ]] && echo "" || { echo " [NOT FOUND]"; continue; }
+    lsattr $(realpath $dir/..) | grep $(basename $dir)
+done
+echo "end."
+
