@@ -1,0 +1,16 @@
+#!/bin/bash
+set -eu
+safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
+
+device_of_file(){
+    df $1 | grep '^/' | cut -d' ' -f1
+}
+
+dev=$(sudo $_sdir/btrbk ls $1 | tail -n+2 | awk '{print $1}' | uniq)
+
+[[ -z $dev ]] && dev=`device_of_file $1`
+mountpoint=$(mount | grep $dev | grep "subvolid=5[^0-9]" | awk '{print $3}')
+if [[ -z $mountpoint ]]; then
+    mountpoint=$(mount | grep $dev | awk '{print $3}' | uniq)
+fi
+echo $mountpoint

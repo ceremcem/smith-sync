@@ -1,0 +1,83 @@
+#!/bin/bash
+safe_source () { [[ ! -z ${1:-} ]] && source $1; _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; _sdir=$(dirname "$(readlink -f "$0")"); }; safe_source
+
+# show help
+show_help(){
+    cat <<HELP
+
+    $(basename $0) [options] path/to/dir[/]
+
+    Notice: The "/" character at the end works like in rsync. 
+
+    Options:
+        --only-ro           : List only readonly snapshots
+        --only-rw           : List only read-write snapshots
+
+HELP
+    exit
+}
+
+die(){
+    echo 
+    echo "ERROR: $@"
+    echo
+    exit 1
+}
+
+# Parse command line arguments
+# ---------------------------
+# Initialize parameters
+only_ro=false
+only_rw=false
+# ---------------------------
+args_backup=("$@")
+args=()
+_count=1
+while :; do
+    key="${1:-}"
+    case $key in
+        -h|-\?|--help|'')
+            show_help    # Display a usage synopsis.
+            exit
+            ;;
+        # --------------------------------------------------------
+        --only-ro)
+            only_ro=true
+            ;;
+        --only-rw)
+            only_rw=true
+            ;;
+        # --------------------------------------------------------
+        -*) # Handle unrecognized options
+            die "Unknown option: $1"
+            ;;
+        *)  # Generate the new positional arguments: $arg1, $arg2, ... and ${args[@]}
+            if [[ ! -z ${1:-} ]]; then
+                declare arg$((_count++))="$1"
+                args+=("$1")
+            fi
+            ;;
+    esac
+    shift
+    [[ -z ${1:-} ]] && break
+done; set -- "${args_backup[@]}"
+# Use $arg1 in place of $1, $arg2 in place of $2 and so on, 
+# "$@" is in the original state,
+# use ${args[@]} for new positional arguments  
+
+errcho () { >&2 echo -e "$@"; }
+
+[[ $(whoami) = "root" ]] || die "This script must be run as root."
+
+filter='if(1)'
+[[ $only_ro = true ]] && filter='if($3 == "readonly")'
+[[ $only_rw = true ]] && filter='if($3 != "readonly")'
+
+$_sdir/btrbk ls "$arg1" | awk '{ '"$filter"' { print $4 }}' | tail -n+2 | sort -r | while read i; do
+    if [[ $arg1 =~ ^.*/$ ]] && [[ $i/ =~ ^$arg1$ ]]; then
+        errcho "INFO: Skipping $i"
+        continue
+    else
+        echo $i
+    fi
+done

@@ -1,3 +1,6 @@
 [submodule "aktos-bash-lib"]
 	path = lib
 	url = https://github.com/aktos-io/aktos-bash-lib
+[submodule "multistrap-helpers"]
+	path = multistrap-helpers
+	url = git@github.com:ceremcem/multistrap-helpers

@@ -143,6 +143,7 @@ for _snap_root in $(get_snapshot_roots $s); do
         else
             btrfs send -q $_parent_arg $missing | pv | btrfs receive $dst_mnt/$snap_root/ > /dev/null
             echo_green "...$missing succesfully sent."
+            echo "$missing has been sent to $dst_mnt/$snap_root" >> "$s/log.txt"
         fi
     done
     echo "end of syncing $snap_root"
