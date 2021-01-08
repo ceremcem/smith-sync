@@ -67,13 +67,13 @@ done; set -- "${args_backup[@]}"
 
 errcho () { >&2 echo -e "$@"; }
 
-[[ $(whoami) = "root" ]] || die "This script must be run as root."
+[[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
 
-filter='if(1)'
-[[ $only_ro = true ]] && filter='if($3 == "readonly")'
-[[ $only_rw = true ]] && filter='if($3 != "readonly")'
+filter='if(NR>1)'
+[[ $only_ro = true ]] && filter='if(NR > 1 && $3 == "readonly")'
+[[ $only_rw = true ]] && filter='if(NR > 1 && $3 == "-")'
 
-$_sdir/btrbk ls "$arg1" | awk '{ '"$filter"' { print $4 }}' | tail -n+2 | sort -r | while read i; do
+$_sdir/btrbk ls "$arg1" | awk '{'"$filter"' print $4}' | sort -r | while read i; do
     if [[ $arg1 =~ ^.*/$ ]] && [[ $i/ =~ ^$arg1$ ]]; then
         errcho "INFO: Skipping $i"
         continue
