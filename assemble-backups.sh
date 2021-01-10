@@ -12,7 +12,10 @@ die(){
 show_help(){
     cat <<HELP
 
-    $(basename $0) path/to/snapshots-root path/to/dest
+    $(basename $0) path/to/snapshots-root [path/to/dest]
+
+    If path/to/dest is omitted, only latest snapshots are listed. 
+
     Options:
         --dry-run           : Dry run, don't touch anything actually
 
@@ -67,7 +70,7 @@ checkrun(){
 }
 
 src=$arg1
-dest=$arg2
+dest=${arg2:-}
 
 ext_regex=".+(\.20[0-9]{6}T[0-9]{4}_?[0-9]?)"
 get_latest(){
@@ -88,11 +91,19 @@ get_latest(){
     done
 }
 
-[[ -e $dest ]] && die "Destination ($dest) exists."
+[[ -n $dest ]] && [[ -e $dest ]] && die "Destination ($dest) exists."
 
 [[ $dryrun = true || $(whoami) = "root" ]] || die "This script must be run as root."
 
 backups=($(get_latest $src))
+
+if [[ -z $dest ]]; then
+    for backup in ${backups[@]}; do
+        echo "$backup"
+    done
+    exit 0
+fi
+
 rootfs=
 for backup in ${backups[@]}; do
     target=$(echo ${backup%.*})
