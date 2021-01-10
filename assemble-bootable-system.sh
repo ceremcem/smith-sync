@@ -102,7 +102,7 @@ cd $_sdir
 if [[ -d $dest ]]; then
     echo "Using existing $dest snapshot."
 else
-    ./assemble-backups.sh $src $dest
+    ./restore-backups.sh $src $dest
 fi
 ./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
 
