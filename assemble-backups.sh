@@ -72,20 +72,39 @@ checkrun(){
 src=$arg1
 dest=${arg2:-}
 
-ext_regex=".+(\.20[0-9]{6}T[0-9]{4}_?[0-9]?)"
+ext_regex="(\.20[0-9]{6}T[0-9]{4}_?[0-9]?)"
 get_latest(){
     local reinspect=()
-    local latest=
+    local snaps=()
+    local names=()
     local path=$1
     local orig_path=${2:-$path}
     while read -r sub; do
-        if ! [[ $sub =~ $ext_regex ]]; then
+        if ! [[ $sub =~ .+$ext_regex ]]; then
             [[ -n $sub ]] && reinspect+=("$sub")
             continue
         fi
-        latest="$sub"
+        # this is a snapshot
+        snaps+=("$sub")
+
+        name=$(echo $sub | sed -r "s/$ext_regex$//")
+        for n in ${names[@]}; do
+            [[ "$n" == "$name" ]] && continue 2
+        done
+        names+=("$name")
     done <<< $( ls -1 $path | sort )
-    [[ -n "$latest" ]] && echo "${path##$orig_path}/$latest"
+    if [ ${#snaps[@]} -gt 0 ]; then 
+        for name in "${names[@]}"; do
+            local latest=
+            for snap in ${snaps[@]}; do
+                [[ "$snap" =~ ${name}${ext_regex}$ ]] || continue
+                if [[ "$snap" > "$latest" ]]; then 
+                    latest=$snap
+                fi
+            done
+            echo "${path##$orig_path}/$latest"
+        done
+    fi
     for s in "${reinspect[@]}"; do
         get_latest "$path/$s" "$orig_path"
     done
