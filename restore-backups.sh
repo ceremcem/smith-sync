@@ -78,7 +78,8 @@ checkrun(){
     if [[ $dryrun == true ]]; then
         echo "[DRY RUN] $@"
     else
-        echo "+ $@"
+        # `btrfs` is already verbose
+        [[ "$1" == "btrfs" ]] || echo "+ $@"
         $@
     fi
 }
