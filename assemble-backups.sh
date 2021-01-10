@@ -14,10 +14,17 @@ show_help(){
 
     $(basename $0) path/to/snapshots-root [path/to/dest]
 
-    If path/to/dest is omitted, only latest snapshots are listed. 
+    If path/to/dest is omitted, matching snapshots are only printed.
 
     Options:
         --dry-run           : Dry run, don't touch anything actually
+        --date TIMESTAMP    : Return only the snapshots that matches with the TIMESTAMP. 
+                              The "latest" keyword may be used in place of TIMESTAMP to 
+                              match root's latest timestamp.
+
+                              Default: "latest"
+
+        --every-latest      : Return every latest snapshot of available snapshots 
 
 HELP
     exit
@@ -27,6 +34,7 @@ HELP
 # ---------------------------
 # Initialize parameters
 dryrun=false
+snapshot_date="latest"
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -41,6 +49,12 @@ while :; do
         # --------------------------------------------------------
         --dry-run)
             dryrun=true
+            ;;
+        --date) shift
+            snapshot_date=$1
+            ;;
+        --every-latest)
+            snapshot_date=""
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -93,16 +107,28 @@ get_latest(){
         done
         names+=("$name")
     done <<< $( ls -1 $path | sort )
+    local get_latest=false
+    [[ "$snapshot_date" == "latest" ]] && get_latest=true
     if [ ${#snaps[@]} -gt 0 ]; then 
         for name in "${names[@]}"; do
             local latest=
             for snap in ${snaps[@]}; do
-                [[ "$snap" =~ ${name}${ext_regex}$ ]] || continue
+                [[ "$snap" =~ ${name}${ext_regex}$ ]] || continue # filter snapshots prefixed with $name
                 if [[ "$snap" > "$latest" ]]; then 
-                    latest=$snap
+                    if $get_latest; then 
+                        # set the latest snapshot date
+                        snapshot_date=${snap##$name.}
+                    fi
+                    if [[ -z $snapshot_date ]]; then 
+                        latest=$snap
+                    else 
+                        if [[ "${snap##$name.}" == "$snapshot_date" ]]; then
+                            latest=$snap
+                        fi
+                    fi
                 fi
             done
-            echo "${path##$orig_path}/$latest"
+            [[ -n $latest ]] && echo "${path##$orig_path}/$latest"
         done
     fi
     for s in "${reinspect[@]}"; do
