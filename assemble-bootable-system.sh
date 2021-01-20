@@ -21,6 +21,10 @@ show_help(){
         --to             : Destination folder. \$root_mnt/\$subvol is used if omitted. 
         --boot-backup    : Path to /boot dir backups, relative to destination folder.
 
+        And arguments where "./restore-backups.sh" accepts: 
+
+        --date YYYYmmddTHHMM : Date to restore 
+
 HELP
     exit
 }
@@ -34,6 +38,8 @@ config=
 src=
 dest=
 boot_backup=
+from_date=   # empty means "latest"
+date=
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -65,6 +71,10 @@ while [ $# -gt 0 ]; do
         --boot-backup) shift
             boot_backup=$1
             ;;
+        --date) shift 
+            from_date="--date ${1:-}"
+            date="${1:-}"
+            ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
             die "Unknown option: $1"
@@ -76,8 +86,7 @@ while [ $# -gt 0 ]; do
             fi
             ;;
     esac
-    shift
-    [[ -z ${1:-} ]] && break
+    [[ -z ${1:-} ]] && break || shift
 done; set -- "${args_backup[@]}"
 # Use $arg1 in place of $1, $arg2 in place of $2 and so on, 
 # "$@" is in the original state,
@@ -97,12 +106,18 @@ echo "Using $dest as destination."
 [[ $(whoami) = "root" ]] || die "This script must be run as root."
 mountpoint $root_mnt > /dev/null || die "$root_mnt is not a mountpoint"
 
+if [[ -n ${from_date:-} && -z ${date:-} ]]; then
+    echo "Date should be one of the followings:" 
+    ls -1 $src | egrep ".+\..+" | sed -r 's/.+\.//'    
+    exit 1
+fi
+
 cd $_sdir
 [[ $refresh = true ]] && $_sdir/btrfs-ls $dest | xargs btrfs sub del 
 if [[ -d $dest ]]; then
     echo "Using existing $dest snapshot."
 else
-    ./restore-backups.sh $src $dest
+    ./restore-backups.sh $src $dest ${from_date:-}
 fi
 ./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
 
