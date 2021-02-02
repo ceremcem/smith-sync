@@ -69,15 +69,20 @@ errcho () { >&2 echo -e "$@"; }
 
 [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
 
-filter='if(NR>1)'
-[[ $only_ro = true ]] && filter='if(NR > 1 && $3 == "readonly")'
-[[ $only_rw = true ]] && filter='if(NR > 1 && $3 == "-")'
+filter=''
+[[ $only_ro = true ]] && filter='if($3 == "readonly")'
+[[ $only_rw = true ]] && filter='if($3 == "-")'
 
-$_sdir/btrbk ls "$arg1" | awk '{'"$filter"' print $4}' | sort -r | while read i; do
+while read i; do
+    [[ -z $i ]] && continue
     if [[ $arg1 =~ ^.*/$ ]] && [[ $i/ =~ ^$arg1$ ]]; then
         errcho "INFO: Skipping $i"
         continue
     else
-        echo $i
+        echo "$i"
     fi
-done
+done <<< $($_sdir/btrbk ls "$arg1" \
+    | sed -n '1!p' \
+    |  awk '{'"$filter"' print}' \
+    | awk '{$1=""; $2=""; $3=""; print}' \
+    | sort -r)
