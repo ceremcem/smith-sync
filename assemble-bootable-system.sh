@@ -113,10 +113,15 @@ if [[ -n ${from_date:-} && -z ${date:-} ]]; then
 fi
 
 cd $_sdir
-[[ $refresh = true ]] && $_sdir/btrfs-ls $dest | xargs btrfs sub del 
+
+# recursively delete all snapshots in destination
+[[ $refresh == true ]]  \
+    && $_sdir/btrfs-ls $dest | xargs btrfs sub del 
+
 if [[ -d $dest ]]; then
     echo "Using existing $dest snapshot."
 else
+    echo "Restoring $dest from backups ($src)"
     ./restore-backups.sh $src $dest ${from_date:-}
 fi
 ./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
