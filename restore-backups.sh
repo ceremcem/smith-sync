@@ -18,13 +18,10 @@ show_help(){
 
     Options:
         --dry-run           : Dry run, don't touch anything actually
-        --date TIMESTAMP    : Return only the snapshots that matches with the TIMESTAMP. 
-                              The "latest" keyword may be used in place of TIMESTAMP to 
-                              match root's latest timestamp.
-
+        --date TIMESTAMP    : Return only the snapshots matching with the TIMESTAMP.
                               Default: "latest"
 
-        --every-latest      : Return every latest snapshot of available snapshots 
+        --every-latest      : Return every latest snapshot of available snapshots
 
 HELP
     exit
@@ -58,7 +55,9 @@ while :; do
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
-            die "Unknown option: $1"
+            echo "Unknown option: $1"
+            show_help
+            die
             ;;
         *)  # Generate the new positional arguments: $arg1, $arg2, ... and ${args[@]}
             if [[ ! -z ${1:-} ]]; then
@@ -137,18 +136,19 @@ get_latest(){
     done
 }
 
-[[ -n $dest ]] && [[ -e $dest ]] && die "Destination ($dest) exists."
-
 [[ $dryrun = true || $(whoami) = "root" ]] || die "This script must be run as root."
 
 backups=($(get_latest $src))
 
+# only print and exit
 if [[ -z $dest ]]; then
     for backup in ${backups[@]}; do
         echo "$backup"
     done
     exit 0
 fi
+
+[[ ${#backups[@]} -eq 0 ]] && die "No backups found in $src"
 
 rootfs=
 for backup in ${backups[@]}; do
@@ -162,12 +162,6 @@ for backup in ${backups[@]}; do
     else
         if [[ $dryrun = false && -d $_dest ]] || [[ $dryrun = true && -d $rootfs/$target ]]; then
             checkrun rmdir "$_dest"
-        else
-            [[ $dryrun = true ]] && _x=$rootfs/$target || _x=$_dest
-            if ! [[ -d $(dirname $_x) ]]; then
-                echo "Skipping $_x (not existed in source)"
-                continue
-            fi
         fi
     fi
     checkrun btrfs sub snap $_src $_dest
