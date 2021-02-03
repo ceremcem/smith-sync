@@ -123,6 +123,9 @@ if [[ -d $dest ]]; then
 else
     echo "Restoring $dest from backups ($src)"
     ./restore-backups.sh $src $dest ${from_date:-}
+    # Workaround for ignored /var/tmp and /var/cache
+    [[ -d $dest/var/tmp ]] || { btrfs sub create $dest/var/tmp; chmod 1777 $dest/var/tmp; } 
+    [[ -d $dest/var/cache ]] || btrfs sub create $dest/var/cache
 fi
 ./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
 
