@@ -1,0 +1,14 @@
+#!/bin/bash
+set -eu
+
+is_btrfs_subvolume() {
+    sudo btrfs subvolume show "$1" >/dev/null 2>&1
+}
+
+if is_btrfs_subvolume "$1"; then
+    echo "yes"
+    exit 0
+else
+    echo "no"
+    exit 1
+fi
