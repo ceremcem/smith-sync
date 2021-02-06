@@ -1,5 +1,9 @@
 # Smith Sync
 
+## Where does the name come from?
+
+![smith-sync](https://user-images.githubusercontent.com/6639874/107101402-40330c80-6828-11eb-9165-7cf84ee74f9d.gif)
+
 ## Description 
 
 This project contains general purpose tools for backup purposes which are built with [aktos-bash-lib](https://github.com/aktos-io/aktos-bash-lib). Scripts are intended to be 
