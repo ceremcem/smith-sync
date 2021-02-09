@@ -8,9 +8,10 @@ show_help(){
 
     Options:
         --before [TIMESTAMP]    : Remove all snapshots before that timestamp 
-                                  (leave empty for the list of available timestamps)
+                                  (Omit the TIMESTAMP to get the list of
+                                  available timestamps)
         --preserve-last N       : Remove all snapshots except for this amount 
-                          of latest snapshots
+                                 of latest snapshots
         --apply                 : No dry-run, actually apply.
 
 HELP
@@ -19,6 +20,7 @@ HELP
 die(){
     >&2 echo
     >&2 echo "$@"
+    >&2 echo
     exit 1
 }
 
@@ -34,6 +36,7 @@ help_die(){
 # Initialize parameters
 limit_string=
 dry_run=true
+help_needed=false
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -81,7 +84,7 @@ if $help_needed; then
     exit 1
 fi
 
-[[ -n ${limit_string:-} ]] || die "--before or --preserve-last is required."
+[[ -n ${limit_string:-} ]] || die '"--before" or "--preserve-last NUM" is required.'
 
 readarray -t to_be_saved < <($_sdir/list-backup-dates.sh $snapshots $limit_string)
 for s in ${to_be_saved[@]}; do
