@@ -19,11 +19,14 @@ show_help(){
         -c, --config     : Config file 
         --from           : Path to snapshots root. Relative to \$root_mnt or full path.
         --to             : Destination folder. \$root_mnt/\$subvol is used if omitted. 
-        --boot-backup    : Path to /boot dir backups, relative to destination folder.
+        --boot-backup    : Path to /boot dir backups, relative to destination folder. Optional.
+        --force-grub-install : Do not skip GRUB install phase even if dest/boot contents 
+                                are not changed
 
         And arguments where "./restore-backups.sh" accepts: 
 
-        --date YYYYmmddTHHMM : Date to restore 
+        --date [YYYYmmddTHHMM] : Date to restore. Omit the date to get a list of
+                                 available timestamps.
 
 HELP
     exit
@@ -40,6 +43,7 @@ dest=
 boot_backup=
 from_date=   # empty means "latest"
 date=
+force_grub_install=false
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -74,6 +78,9 @@ while [ $# -gt 0 ]; do
         --date) shift 
             from_date="--date ${1:-}"
             date="${1:-}"
+            ;;
+        --force-grub-install)
+            force_grub_install=true
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -131,18 +138,29 @@ fi
 
 if $full; then
     mount $boot_part $dest/boot
+    grub_needs_to_be_installed=true
     if [[ -z $boot_backup ]]; then
         echo "No boot_backup folder is declared. Skipping restoring from boot backup"
     else
         if [[ -d $dest/$boot_backup ]]; then
-            echo "Copying contents of \$dest/$boot_backup/ to \$dest/boot/"
-            rsync -a --delete $dest/$boot_backup/ $dest/boot/
+            if /usr/bin/diff -q $dest/$boot_backup/ $dest/boot/; then 
+                echo "Contents of $dest/boot has not been changed. "
+                echo "WARNING: We should have compared the etc/default/grub** contents!"
+                grub_needs_to_be_installed=false
+            else
+                echo "Copying contents of \$dest/$boot_backup/ to \$dest/boot/"
+                rsync -a --delete $dest/$boot_backup/ $dest/boot/
+            fi
         fi
     fi
-    ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config "./2-install-grub.sh; exit;"
+    if $grub_needs_to_be_installed || $force_grub_install; then
+        ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config "./2-install-grub.sh; exit;"
+    else
+        echo "Skipping GRUB installation. (Use \"--force-grub-install\" if necessary.)"
+    fi
     umount $boot_part
 else 
-    echo "INFO: Skipping Grub re-installation."
+    echo "INFO: Not required, skipping Grub re-installation."
 fi
 echo
 echo "All done."
