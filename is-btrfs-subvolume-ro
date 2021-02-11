@@ -1,0 +1,14 @@
+#!/bin/bash
+set -eu
+
+is_btrfs_subvolume_readonly() {
+    sudo btrfs subvolume show "$1" 2> /dev/null | grep "readonly" -q
+}
+
+if is_btrfs_subvolume_readonly "$1"; then
+    echo "yes"
+    exit 0
+else
+    echo "no"
+    exit 1
+fi

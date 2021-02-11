@@ -83,6 +83,7 @@ done; set -- "${args_backup[@]}"
 counter=0
 for i in `ls $snapshots | sort -n -r`; do
     [[ $i =~ \.[0-9]{8}T[0-9]{4}.* ]] || continue
+    "$_sdir/is-btrfs-subvolume-ro" "$snapshots/$i" > /dev/null || continue
     base=$(basename $i)
     timestamp=${base##*.}
     [[ -n ${before_ts:-} ]] && { [[ $timestamp < $before_ts ]] || continue; }
