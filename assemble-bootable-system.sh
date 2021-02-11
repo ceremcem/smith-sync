@@ -22,6 +22,7 @@ show_help(){
         --boot-backup    : Path to /boot dir backups, relative to destination folder. Optional.
         --force-grub-install : Do not skip GRUB install phase even if dest/boot contents 
                                 are not changed
+        --debug-chroot   : Wait before exiting chroot environment
 
         And arguments where "./restore-backups.sh" accepts: 
 
@@ -44,6 +45,7 @@ boot_backup=
 from_date=   # empty means "latest"
 date=
 force_grub_install=false
+end_of_chroot="exit;" 
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -81,6 +83,9 @@ while [ $# -gt 0 ]; do
             ;;
         --force-grub-install)
             force_grub_install=true
+            ;;
+        --debug-chroot)
+            end_of_chroot='echo "-----------------------------"; echo "Debug mode, type \"exit\" when you are done.";'
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -143,18 +148,22 @@ if $full; then
         echo "No boot_backup folder is declared. Skipping restoring from boot backup"
     else
         if [[ -d $dest/$boot_backup ]]; then
-            if /usr/bin/diff -q $dest/$boot_backup/ $dest/boot/; then 
+            if ! $force_grub_install \
+                && /usr/bin/diff -q $dest/$boot_backup/ $dest/boot/
+            then 
                 echo "Contents of $dest/boot has not been changed. "
                 echo "WARNING: We should have compared the etc/default/grub** contents!"
                 grub_needs_to_be_installed=false
-            else
+            fi
+
+            if $grub_needs_to_be_installed; then
                 echo "Copying contents of \$dest/$boot_backup/ to \$dest/boot/"
-                rsync -a --delete $dest/$boot_backup/ $dest/boot/
+                rsync -a --info=progress2 --delete $dest/$boot_backup/ $dest/boot/
             fi
         fi
     fi
     if $grub_needs_to_be_installed || $force_grub_install; then
-        ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config "./2-install-grub.sh; exit;"
+        ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config "./2-install-grub.sh; $end_of_chroot"
     else
         echo "Skipping GRUB installation. (Use \"--force-grub-install\" if necessary.)"
     fi
