@@ -77,8 +77,7 @@ checkrun(){
     if [[ $dryrun == true ]]; then
         echo "[DRY RUN] $@"
     else
-        # `btrfs` is already verbose
-        [[ "$1" == "btrfs" ]] || echo "+ $@"
+        echo "+ $@"
         $@
     fi
 }
@@ -164,5 +163,5 @@ for backup in ${backups[@]}; do
             checkrun rmdir "$_dest"
         fi
     fi
-    checkrun btrfs sub snap $_src $_dest
+    checkrun btrfs -q sub snap $_src $_dest
 done
