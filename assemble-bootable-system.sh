@@ -127,14 +127,18 @@ fi
 cd $_sdir
 
 # recursively delete all snapshots in destination
-[[ $refresh == true ]]  \
-    && $_sdir/btrfs-ls $dest | xargs btrfs sub del 
+if [[ $refresh == true && -d "$dest" ]]; then 
+    echo "Recursively deleting $dest"
+    $_sdir/btrfs-ls $dest | xargs btrfs sub del 
+fi
 
 if [[ -d $dest ]]; then
     echo "Using existing $dest snapshot."
 else
     echo "Restoring $dest from backups ($src)"
+    set -x
     ./restore-backups.sh $src $dest ${from_date:-}
+    set +x
     # Workaround for ignored /var/tmp and /var/cache
     [[ -d $dest/var/tmp ]] || { btrfs sub create $dest/var/tmp; chmod 1777 $dest/var/tmp; } 
     [[ -d $dest/var/cache ]] || btrfs sub create $dest/var/cache
