@@ -10,8 +10,8 @@ show_help(){
     Notice: The "/" character at the end works like in rsync. 
 
     Options:
-        --only-ro           : List only readonly snapshots
-        --only-rw           : List only read-write snapshots
+        --ro, --only-ro           : List only readonly snapshots
+        --rw, --only-rw           : List only read-write snapshots
 
 HELP
     exit
@@ -41,10 +41,10 @@ while :; do
             exit
             ;;
         # --------------------------------------------------------
-        --only-ro)
+        --only-ro|--ro)
             only_ro=true
             ;;
-        --only-rw)
+        --only-rw|--rw)
             only_rw=true
             ;;
         # --------------------------------------------------------
