@@ -162,7 +162,7 @@ if $full; then
 
             if $grub_needs_to_be_installed; then
                 echo "Copying contents of \$dest/$boot_backup/ to \$dest/boot/"
-                rsync -a --info=progress2 --delete $dest/$boot_backup/ $dest/boot/
+                rsync -a --info=progress2 --delete-before $dest/$boot_backup/ $dest/boot/
             fi
         fi
     fi
