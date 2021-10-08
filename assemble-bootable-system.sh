@@ -167,13 +167,13 @@ if $full; then
         fi
     fi
     if $grub_needs_to_be_installed || $force_grub_install; then
-        ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config "./2-install-grub.sh; $end_of_chroot"
+        ./multistrap-helpers/install-to-disk/chroot-to-disk.sh $config --unattended "./2-install-grub.sh; $end_of_chroot"
     else
         echo "Skipping GRUB installation. (Use \"--force-grub-install\" if necessary.)"
     fi
     umount $boot_part
 else 
-    echo "INFO: Not required, skipping Grub re-installation."
+    echo "INFO: Not necessary, skipping Grub re-installation."
 fi
 echo
 echo "All done."
