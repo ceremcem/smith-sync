@@ -7,12 +7,15 @@ suffix=".DO_NOT_DELETE"
 show_help(){
     cat <<HELP
     $(basename $0) [options] /path/to/snapshots/dir
+
     Options:
+
         --freeze        : Freeze latest snapshots (by adding "$suffix" suffix).
         --unfreeze      : Unfreeze the copy of frozen snapshots.
         --clean         : Clean (delete) the frozen snapshots.
         --show          : Show frozen subvolumes if exist.
         --get-latest-ts : Get timestamp of latest snapshots.
+
         --timestamp TS  : Use TS as the timestamp, instead of latest
         --suffix STR    : Use STR as the suffix, instead of "$suffix".
 
@@ -22,12 +25,14 @@ HELP
 die(){
     >&2 echo
     >&2 echo "$@"
+    >&2 echo
     exit 1
 }
 
 help_die(){
     >&2 echo
     >&2 echo "$@"
+    >&2 echo
     show_help
     exit 1
 }
@@ -35,11 +40,7 @@ help_die(){
 # Parse command line arguments
 # ---------------------------
 # Initialize parameters
-freeze=false
-unfreeze=false
-show=false
-clean=false
-get_ts=false
+action=
 snapshots_dir=
 timestamp=
 # ---------------------------
@@ -55,19 +56,19 @@ while [ $# -gt 0 ]; do
             ;;
         # --------------------------------------------------------
         --freeze)
-            freeze=true
+            action="freeze"
             ;;
         --unfreeze)
-            unfreeze=true
+            action="unfreeze"
             ;;
         --show)
-            show=true
+            action="show"
             ;;
         --clean)
-            clean=true
+            action="clean"
             ;;
         --get-latest-ts)
-            get_ts=true
+            action="get-ts"
             ;;
         --timestamp) shift
             timestamp=$1
@@ -94,10 +95,10 @@ done; set -- "${args_backup[@]-}"
 
 snapshots_dir="${arg1:-}"
 
-# Empty argument checking
+# Argument checking
 # -----------------------------------------------
-[[ -z ${snapshots_dir:-} ]] && die "Snapshots dir can not be empty"
-$freeze || $unfreeze || $clean || $show || $get_ts || die "You must choose an action."
+[[ -z ${snapshots_dir:-} ]] && help_die "Snapshots dir can not be empty"
+[[ -z ${action:-} ]] && help_die "You must choose an action."
 
 [[ $(whoami) = "root" ]] || { sudo $0 "$@"; exit 0; }
 
@@ -146,9 +147,11 @@ do_clean(){
     done <<< $(do_show)
 }
 
-# Execute chosen action
-$show && do_show
-$freeze && do_freeze
-$unfreeze && do_unfreeze
-$get_ts && get_latest_ts
-$clean && do_clean
+# Execute the chosen action
+case $action in
+    show)       do_show;;
+    freeze)     do_freeze;;
+    unfreeze)   do_unfreeze;;
+    clean)      do_clean;;
+    get-ts)     get_latest_ts;;
+esac
