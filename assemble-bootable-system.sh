@@ -14,7 +14,7 @@ show_help(){
     $(basename $0) [options] -c path/to/config-file --from path/to/snapshots-root [--to path/to/dest]
 
     Options:
-        --full           : Make a full installation (including Grub install)
+        --full           : Install GRUB (by using files from --boot-backup directory).
         --refresh        : Delete old rootfs recursively, create it from the latest backups
         -c, --config     : Config file 
         --from           : Path to snapshots root. Relative to \$root_mnt or full path.

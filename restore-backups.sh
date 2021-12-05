@@ -14,7 +14,8 @@ show_help(){
 
     $(basename $0) path/to/snapshots-root [path/to/dest]
 
-    If path/to/dest is omitted, matching snapshots are only printed.
+    * If path/to/dest is omitted, matching snapshots are only printed.
+    * Snapshots in /path/to/snapshots-root/* will be treated as "rootfs".
 
     Options:
         --dry-run           : Dry run, don't touch anything actually

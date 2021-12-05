@@ -10,14 +10,14 @@ show_help(){
 
     Options:
 
-        --freeze        : Freeze latest snapshots (by adding "$suffix" suffix).
+        --freeze        : Freeze latest snapshots by creating new snapshots with the suffix.
         --unfreeze      : Unfreeze the copy of frozen snapshots.
         --clean         : Clean (delete) the frozen snapshots.
         --show          : Show frozen subvolumes if exist.
         --get-latest-ts : Get timestamp of latest snapshots.
 
         --timestamp TS  : Use TS as the timestamp, instead of latest
-        --suffix STR    : Use STR as the suffix, instead of "$suffix".
+        --suffix STR    : Use STR as the suffix. Default: "$suffix"
 
 HELP
 }
