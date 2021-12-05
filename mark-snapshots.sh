@@ -124,7 +124,7 @@ do_freeze(){
 }
 
 do_show(){
-    btrfs-ls --ro "$snapshots_dir" | grep "$suffix"
+    btrfs-ls --ro "$snapshots_dir" | grep "$(echo $suffix | sed 's/\./\\./g')$"
 }
 
 do_unfreeze(){
