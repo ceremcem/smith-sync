@@ -10,14 +10,16 @@ show_help(){
 
     Options:
 
-        --freeze        : Freeze latest snapshots by creating new snapshots with the suffix.
-        --unfreeze      : Unfreeze the copy of frozen snapshots.
-        --clean         : Clean (delete) the frozen snapshots.
-        --show          : Show frozen subvolumes if exist.
-        --get-latest-ts : Get timestamp of latest snapshots.
+        (Actions)
+        --freeze         : Freeze latest snapshots by creating new snapshots with the suffix.
+        --unfreeze       : Unfreeze the copy of frozen snapshots.
+        --clean          : Clean (delete) the frozen snapshots.
+        --show           : Show frozen subvolumes if exist.
+        --get-latest-ts  : Get timestamp of latest snapshots.
+        --rename-to .NEW : Rename the current suffixes to the ".NEW" string
 
-        --timestamp TS  : Use TS as the timestamp, instead of latest
-        --suffix STR    : Use STR as the suffix. Default: "$suffix"
+        --timestamp TS   : Use TS as the timestamp, instead of latest
+        --suffix STR     : Use STR as the suffix. Default: "$suffix"
 
 HELP
 }
@@ -43,6 +45,7 @@ help_die(){
 action=
 snapshots_dir=
 timestamp=
+new_suffix=
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -66,6 +69,11 @@ while [ $# -gt 0 ]; do
             ;;
         --clean)
             action="clean"
+            ;;
+        --rename-to) shift
+            action="rename"
+            new_suffix="${1:-}"
+            [[ -z "${new_suffix:-}" ]] && die "New suffix is required"
             ;;
         --get-latest-ts)
             action="get-ts"
@@ -147,6 +155,16 @@ do_clean(){
     done <<< $(do_show)
 }
 
+do_rename(){
+    while read -r sub; do
+        [[ -z "$sub" ]] && continue
+        orig="${sub%$suffix}"
+        _new="${orig}${new_suffix}"
+        echo "Renaming: $sub to $(basename $_new)"
+        mv "$sub" "$_new"
+    done <<< $(do_show)
+}
+
 # Execute the chosen action
 case $action in
     show)       do_show;;
@@ -154,4 +172,5 @@ case $action in
     unfreeze)   do_unfreeze;;
     clean)      do_clean;;
     get-ts)     get_latest_ts;;
+    rename)     do_rename;;
 esac
