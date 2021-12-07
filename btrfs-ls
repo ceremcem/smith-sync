@@ -12,6 +12,7 @@ show_help(){
     Options:
         --ro, --only-ro           : List only readonly snapshots
         --rw, --only-rw           : List only read-write snapshots
+        --relative                : Print relative path
 
 HELP
     exit
@@ -29,6 +30,7 @@ die(){
 # Initialize parameters
 only_ro=false
 only_rw=false
+relative=false
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -46,6 +48,9 @@ while :; do
             ;;
         --only-rw|--rw)
             only_rw=true
+            ;;
+        --relative)
+            relative=true
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -79,7 +84,11 @@ while read i; do
         errcho "INFO: Skipping $i"
         continue
     else
-        echo "$i"
+        if $relative; then
+            [[ "$arg1" != "$i" ]] && realpath --relative-to="$arg1" "$i"
+        else
+            echo "$i"
+        fi
     fi
 done <<< $($_sdir/btrbk ls "$arg1" \
     | sed -n '1!p' \
