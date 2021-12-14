@@ -4,6 +4,3 @@
 [submodule "multistrap-helpers"]
 	path = multistrap-helpers
 	url = git@github.com:ceremcem/multistrap-helpers
-[submodule "btrfs-snapshots-diff"]
-	path = btrfs-snapshots-diff
-	url = https://github.com/ceremcem/btrfs-snapshots-diff
