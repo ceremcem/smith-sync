@@ -4,7 +4,7 @@
 
 ![smith-sync](https://user-images.githubusercontent.com/6639874/107101402-40330c80-6828-11eb-9165-7cf84ee74f9d.gif)
 
-Your backups should be **exact copy** of your main system. Taking backups should be easy.  
+Your backups should be **the exact copy** of your main system. Taking backups should be easy, like Agent Smith does.  
 
 ## Rationale 
 
