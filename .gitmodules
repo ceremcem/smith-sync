@@ -4,3 +4,6 @@
 [submodule "multistrap-helpers"]
 	path = multistrap-helpers
 	url = git@github.com:ceremcem/multistrap-helpers
+[submodule "python-btrfs"]
+	path = python-btrfs
+	url = https://github.com/knorrie/python-btrfs

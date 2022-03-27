@@ -21,6 +21,10 @@ show_help(){
         --timestamp TS   : Use TS as the timestamp, instead of latest
         --suffix STR     : Use STR as the suffix. Default: "$suffix"
 
+        --fix-received TARGET_PATH : Fix the "Received UUID" attribute of the snapshots in 
+                                     TARGET_PATH by replacing them with the UUID of the snapshots
+                                     that have the same filename in source directory.
+
 HELP
 }
 
@@ -46,6 +50,7 @@ action=
 snapshots_dir=
 timestamp=
 new_suffix=
+target_dir=
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -83,6 +88,9 @@ while [ $# -gt 0 ]; do
             ;;
         --suffix) shift
             suffix=$1
+            ;;
+        --fix-received) shift
+            target_dir=$1
             ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
@@ -136,6 +144,7 @@ do_show(){
 }
 
 do_unfreeze(){
+    export PYTHONPATH="${PYTHONPATH:-}:$_sdir/python-btrfs/"
     while read -r sub; do
         [[ -z "$sub" ]] && continue
         echo "Unfreezing: $sub"
@@ -144,6 +153,19 @@ do_unfreeze(){
             echo "Already exists: $sub"
         else
             btrfs sub snap -r "$sub" "$orig"
+        fi
+        if [[ -n "$target_dir" ]]; then
+            local target_snap="$target_dir/$(realpath --relative-to="$snapshots_dir" "$orig")"
+            local t_recv_uuid=$(btrfs sub show $target_snap | egrep "^\s+Received UUID" | cut -d: -f2 | tr -d '[:space:]')
+            local s_uuid=$(btrfs sub show $orig | egrep "^\s+UUID:" | cut -d: -f2 | tr -d '[:space:]')
+            if [[ "$t_recv_uuid" != "$s_uuid" ]]; then
+                echo "Will fix target Received UUID: $target_snap ($t_recv_uuid -> $s_uuid)"
+                btrfs property set -ts $target_snap ro false
+                $_sdir/set_received_uuid.py $s_uuid $target_snap
+                btrfs property set -ts $target_snap ro true
+            else
+                echo "Received UUID is good: $target_snap" 
+            fi
         fi
     done <<< $(do_show)
 }
