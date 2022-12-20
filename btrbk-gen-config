@@ -24,7 +24,7 @@ EOL
     exit 1;
 }
 
-errcho(){ >&2 echo -e "$@"; }
+errcho(){ >&2 echo -e "$@" || true; }
 
 # Print the original config
 cat $config
@@ -48,7 +48,9 @@ exclude_list=("tmp")
 
 $_sdir/btrfs-ls --only-rw "$src" | while read sub; do
     [[ "$(basename $sub)" == "tmp" ]] && {  errcho "Skipping $sub..."; continue; }
-    rel=$(readlink -m "${sub#${src%/}}")
+    [[ "$src" == "$sub" ]] && continue
+    rel=$(readlink -m "${sub#${src%/}}" || echo "")
+    [[ -z ${rel:-} ]] && { errcho "ERROR: Empty rel for: $sub minus $src"; exit 1; }
     new_snapshot_dir=$(readlink -m $dest/$(dirname $rel))
     #echo will backup $sub like $new_snapshot_dir/$(basename $sub).1234567890;
     _subvolume="${sub#$volume/}"
