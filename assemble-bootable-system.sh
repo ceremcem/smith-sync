@@ -7,6 +7,8 @@ die(){
     exit 1
 }
 
+safe_source "$_sdir/lib/btrfs-functions.sh"
+
 # show help
 show_help(){
     cat <<HELP
@@ -14,15 +16,16 @@ show_help(){
     $(basename $0) [options] -c path/to/config-file --from path/to/snapshots-root [--to path/to/dest]
 
     Options:
-        --full           : Install GRUB (by using files from --boot-backup directory).
+        --install-grub   : Install GRUB (by using files from --boot-backup directory).
         --refresh        : Delete old rootfs recursively, create it from the latest backups
         -c, --config     : Config file 
         --from           : Path to snapshots root. Relative to \$root_mnt or full path.
         --to             : Destination folder. \$root_mnt/\$subvol is used if omitted. 
-        --boot-backup    : Path to /boot dir backups, relative to destination folder. Optional.
+        --boot-backup    : Path to /boot dir backups, relative to destination (`--to`) folder. Optional.
         --force-grub-install : Do not skip GRUB install phase even if dest/boot contents 
                                 are not changed
         --debug-chroot   : Wait before exiting chroot environment
+        --dont-touch-rootfs : Do not change anything in rootfs after creating it
 
         And arguments where "./restore-backups.sh" accepts: 
 
@@ -36,7 +39,7 @@ HELP
 # Parse command line arguments
 # ---------------------------
 # Initialize parameters
-full=false
+install_grub=false
 refresh=false
 config=
 src=
@@ -46,6 +49,7 @@ from_date=   # empty means "latest"
 date=
 force_grub_install=false
 end_of_chroot="exit;" 
+dont_touch_rootfs=false
 # ---------------------------
 args_backup=("$@")
 args=()
@@ -58,9 +62,9 @@ while [ $# -gt 0 ]; do
             exit
             ;;
         # --------------------------------------------------------
-        --full)
+        --full|--install-grub)
             # install Grub, etc.
-            full=true
+            install_grub=true
             ;;
         --refresh)
             refresh=true
@@ -87,6 +91,9 @@ while [ $# -gt 0 ]; do
         --debug-chroot)
             end_of_chroot='echo "-----------------------------"; echo "Debug mode, type \"exit\" when you are done.";'
             ;;
+        --dont-touch-rootfs)
+            dont_touch_rootfs=true
+            ;;
         # --------------------------------------------------------
         -*) # Handle unrecognized options
             die "Unknown option: $1"
@@ -109,8 +116,10 @@ config=$(realpath $config)
 cd "$(dirname "$config")"
 source $config
 
-[[ -z $src ]] && die "Source of snapshots is required."
-[[ -d $root_mnt/$src ]] && src=$root_mnt/$src # relative path is used. 
+if $refresh; then 
+    [[ -z $src ]] && die "Source of snapshots is required."
+    [[ -d $root_mnt/$src ]] && src=$root_mnt/$src # relative path is used. 
+fi
 
 [[ -z $dest ]] && dest="$root_mnt/$subvol"
 echo "Using $dest as destination."
@@ -140,12 +149,25 @@ else
     ./restore-backups.sh $src $dest ${from_date:-}
     set +x
     # Workaround for ignored /var/tmp and /var/cache
-    [[ -d $dest/var/tmp ]] || { btrfs sub create $dest/var/tmp; chmod 1777 $dest/var/tmp; } 
-    [[ -d $dest/var/cache ]] || btrfs sub create $dest/var/cache
-fi
-./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
+    [[ -d $dest/tmp ]] && is_btrfs_subvolume $dest/tmp || rm -r $dest/tmp || true
+    [[ -d $dest/var/tmp ]] && is_btrfs_subvolume $dest/var/tmp || rm -r $dest/var/tmp || true
+    [[ -d $dest/var/cache ]] && is_btrfs_subvolume $dest/var/cache || rm -r $dest/var/cache || true
 
-if $full; then
+    [[ -d $dest/tmp ]] || btrfs sub create $dest/tmp
+    [[ -d $dest/var/tmp ]] || btrfs sub create $dest/var/tmp
+    [[ -d $dest/var/cache ]] || btrfs sub create $dest/var/cache
+
+    chmod 1777 $dest/var/tmp
+    chmod 1777 $dest/tmp
+fi
+
+if $dont_touch_rootfs; then 
+    echo "Skipping altering rootfs boot files (/etc/fstab, ...)"
+else
+    ./multistrap-helpers/install-to-disk/generate-scripts.sh $config -o $dest --update
+fi
+
+if $install_grub; then
     mount $boot_part $dest/boot
     grub_needs_to_be_installed=true
     if [[ -z $boot_backup ]]; then
