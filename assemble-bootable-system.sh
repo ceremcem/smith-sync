@@ -149,9 +149,9 @@ else
     ./restore-backups.sh $src $dest ${from_date:-}
     set +x
     # Workaround for ignored /var/tmp and /var/cache
-    [[ -d $dest/tmp ]] && is_btrfs_subvolume $dest/tmp || rm -r $dest/tmp || true
-    [[ -d $dest/var/tmp ]] && is_btrfs_subvolume $dest/var/tmp || rm -r $dest/var/tmp || true
-    [[ -d $dest/var/cache ]] && is_btrfs_subvolume $dest/var/cache || rm -r $dest/var/cache || true
+    [[ -d $dest/tmp ]] && { is_btrfs_subvolume $dest/tmp || rm -r $dest/tmp || true; }
+    [[ -d $dest/var/tmp ]] && { is_btrfs_subvolume $dest/var/tmp || rm -r $dest/var/tmp || true; }
+    [[ -d $dest/var/cache ]] && { is_btrfs_subvolume $dest/var/cache || rm -r $dest/var/cache || true; }
 
     [[ -d $dest/tmp ]] || btrfs sub create $dest/tmp
     [[ -d $dest/var/tmp ]] || btrfs sub create $dest/var/tmp
@@ -159,6 +159,11 @@ else
 
     chmod 1777 $dest/var/tmp
     chmod 1777 $dest/tmp
+
+    # Disable CoW for some obvious folders:
+    # https://unix.stackexchange.com/questions/305590/btrfs-what-system-directories-should-have-copy-on-write-disabled#comment536838_305590
+    chattr +C $dest/tmp || true
+    chattr +C $dest/var
 fi
 
 if $dont_touch_rootfs; then 
@@ -199,4 +204,3 @@ else
 fi
 echo
 echo "All done."
-echo "Test with VirtualBox (Don't forget to unmount $root_mnt)"
