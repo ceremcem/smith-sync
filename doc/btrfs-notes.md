@@ -25,7 +25,7 @@ btrfs scrub start -B /path/to/mountpoint
 
 > Based on https://btrfs.wiki.kernel.org/index.php/Using_Btrfs_with_Multiple_Devices#Conversion
 
-Assuming your root btrfs subvolume on your primary disk (`/dev/sda`) is mounted on `/` and you want to add a btrfs partition (`/dev/mapper/foo-root`) as RAID1, which is on an LVM (named: `foo`) partition on a LUKS partition (`/dev/sdb2`).
+Assuming your root btrfs subvolume is on an LVM partition (`/dev/mapper/foo-root`) on your primary disk (`/dev/sda`) is mounted on `/` and you want to add a partition (`/dev/mapper/foo2-root`) as RAID1, which is on an LVM (named: `foo2`) partition on a LUKS partition (`/dev/sdb2`).
 
 > ## FINISH THIS HOWTO'S TESTS
 
@@ -41,15 +41,41 @@ Key slot 0 unlocked.
 Key slot 1 created.
 Command successful.
 # blkid | awk '$1 == "/dev/sdb2:" {print $2}'
-# echo "foo_crypt UUID=the-above-uuid-of-sdb2 /etc/luks-keys/sdb2.key luks" >> /etc/crypttab
+# echo "foo2_crypt UUID=the-above-uuid-of-sdb2 /etc/luks-keys/sdb2.key luks" >> /etc/crypttab
+
+# ----- Start of fail case -----
+# # If computer is rebooted at this point, BTRFS will complain about missing device because 
+# # cryptsetup doesn't know if it needs to open `/dev/sdb2` too in order to properly mount 
+# # `foo-root` yet. If you open your system with a rescue disk and mount `foo-root` with `-o degraded`
+# # or pass "degraded" option to the kernel inside GRUB (rootflags=degraded,...), you'll be able to 
+# # mount your partition IN RW MODE, BUT ONLY ONCE. If you can't fix the "missing device issue, 
+# # you'll end up with a BTRFS file system that can only be mounted with `-o degraded,ro` option. 
+# # From this point on, your only option (except backing up the files, recreating the fs and restoring 
+# # your files back) is making `foo-root` partition available (decrypt `/dev/sda2` and lvscan) 
+# # and mounting the other device (`foo2-root` on `/dev/sdb2`) to a directory (`/mnt/foo_raid1`). 
+# # Run `btrfs fi usage /mnt/foo_raid1` and if you see any "Single" and/or "DUP" data, run the following
+# #
+# #     btrfs balance start -dconvert=raid1 -mconvert=raid1 /mnt/foo_raid1
+# # 
+# ----- End of fail case -----
+
+
+
+
+cryptroot/crypttab ??? (only one entry)
+
+
+
+
+
 # update-initramfs -u  # TODO: TEST THIS!!!
 ```
 
 Add the partition as RAID1:
 ```
-cryptsetup open /dev/sdb2 foo_crypt
+cryptsetup open /dev/sdb2 foo2_crypt
 lvscan 
-btrfs device add /dev/mapper/foo-root / ##### <- warning at the moment this will fail with READONLY filesystem
+btrfs device add /dev/mapper/foo2-root /
 btrfs balance start -dconvert=raid1 -mconvert=raid1 /
 ```
 
